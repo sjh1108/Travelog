@@ -46,3 +46,11 @@ source DB/ssafybook_schema.sql;
 
 -- 2. 더미 데이터 삽입
 source DB/ssafybook_dummy_data.sql;
+```
+
+## 5. 사용 기술
+* Database: MySQL
+
+* DB Tool: MySQL Workbench
+
+* ERD Tool: ERD Cloud
