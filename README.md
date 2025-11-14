@@ -119,7 +119,7 @@ SNS 기록의 '배경 데이터'가 되는 필수 기능입니다.
 바로 이어서 '5. 와이어프레임 / UX' 단계에 필요한 **주요 화면 목록**을 정의해 볼까요?
 
 # 5. 와이어 프레임 / UX
-[!image](/image/UX.png)
+![!image](./image/UX.png)
 # 6. 기술 스택
 
 <img src="https://img.shields.io/badge/java-007396?style=for-the-badge&logo=java&logoColor=white"> 
