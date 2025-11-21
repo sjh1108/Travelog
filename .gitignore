@@ -1,0 +1,49 @@
+### Java & Maven Standard ###
+target/
+*.class
+*.log
+.mvn/wrapper/maven-wrapper.properties
+
+# Maven Wrapper .jar 파일은 포함해야 다른 사람이 빌드할 수 있음
+!**/src/main/**/target/
+!**/src/test/**/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+build/
+
+### STS / Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+### VS Code ###
+.vscode/
+*.code-workspace
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### OS (Mac & Windows) ###
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+### Sensitive Data (보안 주의) ###
+# 실수로 AWS 키나 DB 비번이 깃허브에 올라가지 않게 주의하세요.
+# 중요한 설정 파일은 따로 관리하는 것이 좋습니다.
+# application-secret.properties
