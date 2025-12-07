@@ -43,8 +43,8 @@ API 명세서는 노션(Notion)을 통해 관리하고 있으며, Swagger를 통
 효율적인 개발을 위해 기능 간 의존성을 고려하여 순차적으로 구현합니다.
 
 ### **Phase 1: 환경 설정 및 인증 (D-Day ~ D+2)**
-- [ ] 프로젝트 생성 및 Git 레포지토리 초기화
-- [ ] DB 설계 (ERD) 및 스키마 생성
+- [x] 프로젝트 생성 및 Git 레포지토리 초기화
+- [x] DB 설계 (ERD) 및 스키마 생성
 - [ ] Spring Security + JWT 기반 회원가입/로그인 구현
 - [ ] Vue.js 기본 레이아웃 구성
 
@@ -82,3 +82,18 @@ src/main/java/com/ssafy/travelog
 │   ├── mapper      # MyBatis Mapper Interface
 │   └── service     # Business Logic
 └── util            # JWT, File Upload Utils
+```
+
+## 12월 5일 진행사항
+1. 뷰 초안 제작
+* 메인페이지
+[메인 페이지](./image/Dec_5th/main_page.png)
+* 게시글 페이지
+[게시글 페이지](./image/Dec_5th/post_page.png)
+[게시글 사진](./image/Dec_5th/post.png)
+* 피드 페이지
+[피드 페이지](./image/Dec_5th/feed.png)
+* 마이 페이지
+[마이 페이지](./image/Dec_5th/my_page.png)
+* 업로드 페이지
+[업로드 페이지](./image/Dec_5th/upload_page.png)
