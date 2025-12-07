@@ -87,13 +87,13 @@ src/main/java/com/ssafy/travelog
 ## 12월 5일 진행사항
 1. 뷰 초안 제작
 * 메인페이지
-[메인 페이지](./image/Dec_5th/main_page.png)
+![메인 페이지](./image/Dec_5th/main_page.png)
 * 게시글 페이지
-[게시글 페이지](./image/Dec_5th/post_page.png)
-[게시글 사진](./image/Dec_5th/post.png)
+![게시글 페이지](./image/Dec_5th/post_page.png)
+![게시글 사진](./image/Dec_5th/post.png)
 * 피드 페이지
-[피드 페이지](./image/Dec_5th/feed.png)
+![피드 페이지](./image/Dec_5th/feed.png)
 * 마이 페이지
-[마이 페이지](./image/Dec_5th/my_page.png)
+![마이 페이지](./image/Dec_5th/my_page.png)
 * 업로드 페이지
-[업로드 페이지](./image/Dec_5th/upload_page.png)
+![업로드 페이지](./image/Dec_5th/upload_page.png)
