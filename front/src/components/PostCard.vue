@@ -1,90 +1,114 @@
 <template>
-  <article class="border border-border/40 rounded-lg overflow-hidden">
+  <div class="bg-background border border-border rounded-lg shadow overflow-hidden mb-4 hover:shadow-lg transition-shadow">
     <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b border-border/40">
+    <div class="flex items-center justify-between p-4 border-b border-border">
       <div class="flex items-center gap-3">
-        <img
-          :src="post.author.avatar"
-          :alt="post.author.name"
-          class="w-10 h-10 rounded-full object-cover"
-        />
-        <div>
-          <p class="font-semibold">{{ post.author.name }}</p>
-          <p class="text-xs text-muted-foreground">{{ post.timestamp }}</p>
+        <router-link :to="`/profile/${post.userId}`">
+          <img
+            :src="post.user.profileImage || '/placeholder.svg'"
+            :alt="post.user.nickname"
+            class="rounded-full object-cover w-10 h-10 cursor-pointer hover:opacity-80 transition-opacity"
+          />
+        </router-link>
+        <div class="flex flex-col">
+          <router-link :to="`/profile/${post.userId}`">
+            <h3 class="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer">
+              {{ post.user.nickname }}
+            </h3>
+          </router-link>
+          <p class="text-xs text-foreground/50">{{ post.travelLocation }}</p>
         </div>
       </div>
-      <button class="p-2 hover:bg-muted rounded-full transition-colors">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-        </svg>
+      <button class="text-foreground/60 hover:text-foreground transition-colors">
+        <span class="text-xl">•••</span>
       </button>
     </div>
 
     <!-- Image -->
-    <img
-      :src="post.image"
-      :alt="post.caption"
-      class="w-full aspect-square object-cover"
-    />
+    <router-link :to="`/post/${post.id}`">
+      <div class="relative w-full cursor-pointer">
+        <img
+          :src="post.imageUrl || '/placeholder.svg'"
+          :alt="post.travelLocation"
+          class="w-full aspect-square object-cover hover:opacity-95 transition-opacity"
+        />
+      </div>
+    </router-link>
 
     <!-- Actions -->
-    <div class="p-4 border-b border-border/40">
-      <div class="flex items-center gap-4 mb-4">
-        <button class="p-2 hover:bg-muted rounded-full transition-colors -ml-2">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-        </button>
-        <button class="p-2 hover:bg-muted rounded-full transition-colors -ml-2">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-        </button>
-        <button class="p-2 hover:bg-muted rounded-full transition-colors -ml-2">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-      </div>
-    </div>
+    <div class="flex items-center gap-4 p-4 border-b border-border">
+      <!-- Like Button Component -->
+      <LikeButton :post-id="post.id" :initial-like-count="post.likeCount" />
 
-    <!-- Stats -->
-    <div class="px-4 py-2 border-b border-border/40">
-      <p class="text-sm font-semibold">{{ post.likes }} likes</p>
+      <button
+        @click="onCommentClick(post.id)"
+        class="flex items-center gap-1 text-foreground/60 hover:text-primary transition-colors group"
+        title="Comment"
+      >
+        <MessageCircle class="h-6 w-6 group-hover:scale-110 transition-transform" />
+        <span class="text-sm">{{ commentCount }}</span>
+      </button>
+
+      <button class="flex items-center gap-1 text-foreground/60 hover:text-accent transition-colors group ml-auto">
+        <Share2 class="h-6 w-6 group-hover:scale-110 transition-transform" />
+      </button>
     </div>
 
     <!-- Caption -->
-    <div class="px-4 py-3 border-b border-border/40">
-      <p class="text-sm">
-        <span class="font-semibold">{{ post.author.name }}</span>
-        {{ post.caption }}
+    <div class="px-4 py-3">
+      <p class="text-sm text-foreground">
+        <span class="font-semibold">{{ post.user.nickname }}</span>
+        &nbsp;
+        <span class="text-foreground/80"> {{ post.caption }}</span>
       </p>
     </div>
 
-    <!-- Comments -->
-    <div class="px-4 py-3 border-b border-border/40">
-      <p class="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
-        View all {{ post.comments }} comments
-      </p>
+    <!-- Comments Preview -->
+    <div class="px-4 pb-4">
+      <button
+        @click="onCommentClick(post.id)"
+        class="text-xs text-foreground/50 hover:text-foreground/70 transition-colors"
+      >
+        View all {{ commentCount }} comments
+      </button>
     </div>
 
-    <!-- Comment Input -->
-    <div class="px-4 py-3 flex items-center gap-3">
-      <input
-        type="text"
-        placeholder="Add a comment..."
-        class="flex-1 bg-transparent text-sm outline-none placeholder-muted-foreground"
-      />
-      <button class="text-blue-500 text-sm font-semibold hover:text-blue-600">Post</button>
+    <!-- Timestamp -->
+    <div class="px-4 pb-4 border-t border-border pt-3">
+      <router-link
+        :to="`/post/${post.id}`"
+        class="text-xs text-foreground/40 hover:text-foreground/60 transition-colors"
+      >
+        {{ formatDate(post.createdAt) }}
+      </router-link>
     </div>
-  </article>
+  </div>
 </template>
 
 <script setup>
-defineProps({
-  post: {
-    type: Object,
-    required: true
-  }
+import { computed } from 'vue'
+import { MessageCircle, Share2 } from 'lucide-vue-next'
+import { useAppStore } from '@/stores/app'
+import LikeButton from './LikeButton.vue'
+
+const props = defineProps({
+  post: Object,
+  onCommentClick: Function
 })
+
+const store = useAppStore()
+
+const commentCount = computed(() => {
+  const comments = store.getComments(props.post.id)
+  return comments.length || props.post.commentCount
+})
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
 </script>
