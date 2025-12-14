@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.travelog.model.mapper.AttractionMapper">
+
+    <insert id="insertAttraction" parameterType="AttractionDto">
+        INSERT IGNORE INTO attractions
+        (content_id, title, addr1, first_image, map_x, map_y, content_type_id)
+        VALUES
+        (#{contentId}, #{title}, #{addr1}, #{firstImage}, #{mapX}, #{mapY}, #{contentTypeId})
+    </insert>
+
+    <select id="selectAttractionById" resultType="AttractionDto">
+        SELECT * FROM attractions WHERE content_id = #{contentId}
+    </select>
+
+    <select id="searchAttractions" parameterType="String" resultType="AttractionDto">
+        SELECT * FROM attractions
+        WHERE title LIKE CONCAT('%', #{keyword}, '%')
+            LIMIT 20
+    </select>
+
+</mapper>

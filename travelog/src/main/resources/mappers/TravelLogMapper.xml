@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.travelog.model.mapper.TravelLogMapper">
+
+    <insert id="insertLog" parameterType="TravelLogDto" useGeneratedKeys="true" keyProperty="logId">
+        INSERT INTO travel_logs (user_id, title, theme, start_date, end_date)
+        VALUES (#{userId}, #{title}, #{theme}, #{startDate}, #{endDate})
+    </insert>
+
+    <insert id="insertLogDetail" parameterType="LogDetailDto">
+        INSERT INTO log_details (log_id, content_id, description, cost, visit_order, image_url)
+        VALUES (#{logId}, #{contentId}, #{description}, #{cost}, #{visitOrder}, #{imageUrl})
+    </insert>
+
+    <select id="selectAllLogs" resultType="TravelLogDto">
+        SELECT l.*, u.nickname as user_nickname
+        FROM travel_logs l
+                 JOIN users u ON l.user_id = u.user_id
+        ORDER BY l.created_at DESC
+    </select>
+
+    <select id="selectLogById" resultType="TravelLogDto">
+        SELECT l.*, u.nickname as user_nickname
+        FROM travel_logs l
+                 JOIN users u ON l.user_id = u.user_id
+        WHERE l.log_id = #{logId}
+    </select>
+
+    <select id="selectDetailsByLogId" resultType="LogDetailDto">
+        SELECT d.*, a.title as content_title
+        FROM log_details d
+                 JOIN attractions a ON d.content_id = a.content_id
+        WHERE d.log_id = #{logId}
+        ORDER BY d.visit_order ASC
+    </select>
+
+</mapper>
