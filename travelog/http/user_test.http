@@ -1,0 +1,18 @@
+### 1. 회원가입 테스트 (Join)
+POST http://localhost:8080/api/users/join
+Content-Type: application/json
+
+{
+  "email": "intellij@ssafy.com",
+  "password": "1234",
+  "nickname": "인텔리제이"
+}
+
+### 2. 로그인 테스트 (Login)
+POST http://localhost:8080/api/users/login
+Content-Type: application/json
+
+{
+  "email": "intellij@ssafy.com",
+  "password": "1234"
+}
