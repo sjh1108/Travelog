@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.travelog.model.mapper.TravelDetailMapper">
+
+    <insert id="insertDetail" parameterType="travelDetailDto">
+        INSERT INTO Travel_Details
+        (travel_record_id, tourist_spot_id, sequence_order, review, cost, visit_date, photos, latitude, longitude)
+        VALUES (
+                   #{travelRecordId},
+                   #{touristSpotId},
+                   #{sequenceOrder},
+                   #{review},
+                   #{cost},
+                   #{visitDate},
+                   #{photos},
+                   #{latitude},
+                   #{longitude}
+               )
+    </insert>
+
+    <select id="selectDetailsByRecordId" resultType="travelDetailDto">
+        SELECT
+            id,
+            travel_record_id AS travelRecordId,
+            tourist_spot_id AS touristSpotId,
+            sequence_order AS sequenceOrder,
+            review,
+            cost,
+            visit_date AS visitDate,
+            photos,
+            latitude,
+            longitude
+        FROM Travel_Details
+        WHERE travel_record_id = #{recordId}
+        ORDER BY sequence_order ASC
+    </select>
+
+</mapper>

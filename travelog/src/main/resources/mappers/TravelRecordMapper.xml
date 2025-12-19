@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.travelog.model.mapper.TravelRecordMapper">
+
+    <insert id="insertRecord" parameterType="travelRecordDto">
+        INSERT INTO Travel_Records
+            (user_id, title, start_date, end_date, total_cost, theme, is_public)
+        VALUES (
+                       (SELECT id FROM Users WHERE email = #{userEmail}),
+                       #{title},
+                       #{startDate},
+                       #{endDate},
+                       #{totalCost},
+                       #{theme},
+                       #{isPublic}
+               )
+    </insert>
+
+    <select id="selectAll" resultType="travelRecordDto">
+        SELECT
+            t.id,
+            u.email AS userEmail,
+            u.nickname,
+            t.title,
+            t.start_date AS startDate,
+            t.end_date AS endDate,
+            t.total_cost AS totalCost,
+            t.theme,
+            t.is_public AS isPublic,
+            t.created_at AS createdAt
+        FROM Travel_Records t
+                 JOIN Users u ON t.user_id = u.id
+        WHERE t.is_public = true
+        ORDER BY t.created_at DESC
+    </select>
+
+    <select id="selectMyRecords" resultType="travelRecordDto" parameterType="string">
+        SELECT
+            t.id,
+            u.email AS userEmail,
+            u.nickname,
+            t.title,
+            t.start_date AS startDate,
+            t.end_date AS endDate,
+            t.total_cost AS totalCost,
+            t.theme,
+            t.is_public AS isPublic,
+            t.created_at AS createdAt
+        FROM Travel_Records t
+                 JOIN Users u ON t.user_id = u.id
+        WHERE u.email = #{email}
+        ORDER BY t.created_at DESC
+    </select>
+
+</mapper>
