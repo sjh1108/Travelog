@@ -1,0 +1,94 @@
+### 전역 변수 설정
+@host = http://localhost:8080
+
+### 1. 회원가입
+POST {{host}}/api/users/join
+Content-Type: application/json
+
+{
+  "email": "test@ssafy.com",
+  "password": "1234",
+  "nickname": "여행자",
+  "profileImage": "http://img.url/profile.jpg",
+  "bio": "안녕하세요! 여행을 좋아합니다."
+}
+
+### 2. 로그인 (토큰 자동 저장)
+POST {{host}}/api/users/login
+Content-Type: application/json
+
+{
+  "email": "test@ssafy.com",
+  "password": "1234"
+}
+
+> {%
+    client.global.set("authToken", response.body.accessToken);
+    client.log("토큰 저장 완료: " + response.body.accessToken);
+%}
+
+### 3. 게시물(Post) 작성
+POST {{host}}/api/posts
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "imageUrl": "http://img.url/jeju.jpg",
+  "travelLocation": "제주도",
+  "caption": "제주도 바다가 너무 예뻐요!"
+}
+
+### 4. 전체 게시물 조회
+GET {{host}}/api/posts
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+### 5. 여행 기록(Travel Record) 작성 (부모 데이터)
+POST {{host}}/api/travels
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "부산 2박 3일 먹방 여행",
+  "startDate": "2025-05-01",
+  "endDate": "2025-05-03",
+  "totalCost": 350000,
+  "theme": "먹방",
+  "isPublic": true
+}
+
+### 6. 전체 여행 기록 조회
+GET {{host}}/api/travels
+Authorization: Bearer {{authToken}}
+
+### 7. 내 여행 기록 조회
+GET {{host}}/api/travels/my
+Authorization: Bearer {{authToken}}
+
+### 8. 상세 일정(Travel Detail) 추가 (자식 데이터)
+POST {{host}}/api/travels/1/details
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+[
+  {
+    "sequenceOrder": 1,
+    "review": "해운대 도착! 바다가 너무 파랗다.",
+    "cost": 5000,
+    "visitDate": "2025-05-01",
+    "latitude": 35.1587,
+    "longitude": 129.1603
+  },
+  {
+    "sequenceOrder": 2,
+    "review": "저녁으로 맛있는 회를 먹었다.",
+    "cost": 80000,
+    "visitDate": "2025-05-01",
+    "latitude": 35.1600,
+    "longitude": 129.1620
+  }
+]
+
+### 9. 특정 여행의 상세 일정 조회
+GET {{host}}/api/travels/1/details
+Authorization: Bearer {{authToken}}

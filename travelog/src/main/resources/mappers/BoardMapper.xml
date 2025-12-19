@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.travelog.model.mapper.BoardMapper">
+
+    <insert id="insertBoard" parameterType="boardDto">
+        INSERT INTO Posts (user_id, image_url, travel_location, caption)
+        VALUES (
+                       (SELECT id FROM Users WHERE email = #{writerEmail}),
+                       #{imageUrl},
+                       #{travelLocation},
+                       #{caption}
+               )
+    </insert>
+
+    <select id="listPosts" resultType="boardDto">
+        SELECT
+            p.id,
+            u.email AS writerEmail,        u.nickname,                    u.profile_image AS profileImage, p.image_url AS imageUrl,
+            p.travel_location AS travelLocation,
+            p.caption,
+            p.like_count AS likeCount,
+            p.comment_count AS commentCount,
+            p.created_at AS createdAt
+        FROM Posts p
+                 JOIN Users u ON p.user_id = u.id
+        ORDER BY p.created_at DESC
+    </select>
+
+</mapper>

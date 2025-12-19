@@ -41,15 +41,9 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserDto userDto) {
         try {
-            // 1. 서비스에서 로그인 처리 (ID/PW 검증)
             UserDto loginUser = userService.login(userDto);
+            String token = jwtUtil.createToken(loginUser.getEmail(), loginUser.getNickname());
 
-            // 2. JWT 토큰 생성 (수정된 부분)
-            // 첫 번째 인자: 저장할 데이터의 키 이름 ("email")
-            // 두 번째 인자: 실제 데이터 값 (유저의 이메일)
-            String token = jwtUtil.createToken("email", loginUser.getEmail());
-
-            // 3. 응답 데이터 구성
             Map<String, Object> result = new HashMap<>();
             result.put("message", "로그인 성공");
             result.put("accessToken", token);
@@ -59,7 +53,7 @@ public class UserController {
             return new ResponseEntity<>(result, HttpStatus.OK);
 
         } catch (Exception e) {
-            log.error("로그인 실패: {}", e.getMessage());
+            log.error("로그인 실패", e);
             return new ResponseEntity<>("아이디 또는 비밀번호를 확인하세요.", HttpStatus.UNAUTHORIZED);
         }
     }
