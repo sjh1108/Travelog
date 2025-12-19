@@ -22,49 +22,127 @@
 
         <!-- Right Menu -->
         <div class="flex items-center gap-6">
-          <router-link
-            to="/upload"
-            class="flex items-center gap-2 text-foreground transition-colors hover:text-primary"
-            title="Upload Photo"
-          >
-            <Upload class="h-6 w-6" />
-            <span class="hidden sm:inline">Upload</span>
-          </router-link>
+          <!-- 로그인 상태일 때 -->
+          <template v-if="store.isLoggedIn">
+            <router-link
+              to="/upload"
+              class="flex items-center gap-2 text-foreground transition-colors hover:text-primary"
+              title="Upload Photo"
+            >
+              <Upload class="h-6 w-6" />
+              <span class="hidden sm:inline">Upload</span>
+            </router-link>
 
-          <router-link
-            to="/feed"
-            class="flex items-center gap-2 text-foreground transition-colors hover:text-primary"
-            title="Feed"
-          >
-            <Home class="h-6 w-6" />
-            <span class="hidden sm:inline">Feed</span>
-          </router-link>
+            <router-link
+              to="/feed"
+              class="flex items-center gap-2 text-foreground transition-colors hover:text-primary"
+              title="Feed"
+            >
+              <Home class="h-6 w-6" />
+              <span class="hidden sm:inline">Feed</span>
+            </router-link>
 
-          <router-link
-            to="/notifications"
-            class="relative text-foreground transition-colors hover:text-secondary"
-            title="Notifications"
-          >
-            <Heart class="h-6 w-6" />
-            <span class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-white text-xs font-bold">
-              3
-            </span>
-          </router-link>
+            <router-link
+              to="/notifications"
+              class="relative text-foreground transition-colors hover:text-secondary"
+              title="Notifications"
+            >
+              <Heart class="h-6 w-6" />
+              <span class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-white text-xs font-bold">
+                3
+              </span>
+            </router-link>
 
-          <router-link
-            to="/mypage"
-            class="flex items-center gap-2 text-foreground transition-colors hover:text-primary"
-            title="My Page"
-          >
-            <User class="h-6 w-6" />
-            <span class="hidden sm:inline">Profile</span>
-          </router-link>
+            <router-link
+              to="/mypage"
+              class="flex items-center gap-2 text-foreground transition-colors hover:text-primary"
+              title="My Page"
+            >
+              <User class="h-6 w-6" />
+              <span class="hidden sm:inline">Profile</span>
+            </router-link>
+
+            <button
+              @click="handleLogout"
+              class="flex items-center gap-2 text-foreground transition-colors hover:text-primary"
+              title="Logout"
+            >
+              <LogOut class="h-6 w-6" />
+              <span class="hidden sm:inline">Logout</span>
+            </button>
+          </template>
+
+          <!-- 로그아웃 상태일 때 -->
+          <template v-else>
+            <router-link
+              to="/feed"
+              class="flex items-center gap-2 text-foreground transition-colors hover:text-primary"
+              title="Feed"
+            >
+              <Home class="h-6 w-6" />
+              <span class="hidden sm:inline">Feed</span>
+            </router-link>
+
+            <button
+              @click="showLoginModal = true"
+              class="flex items-center gap-2 text-foreground transition-colors hover:text-primary"
+              title="Login"
+            >
+              <LogIn class="h-6 w-6" />
+              <span class="hidden sm:inline">Login</span>
+            </button>
+
+            <button
+              @click="showRegisterModal = true"
+              class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Sign Up
+            </button>
+          </template>
         </div>
       </div>
     </div>
+
+    <!-- 로그인 모달 -->
+    <LoginModal
+      v-model="showLoginModal"
+      @switchToRegister="switchToRegister"
+    />
+
+    <!-- 회원가입 모달 -->
+    <RegisterModal
+      v-model="showRegisterModal"
+      @switchToLogin="switchToLogin"
+    />
   </nav>
 </template>
 
 <script setup>
-import { Heart, Search, User, MapPin, Upload, Home } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { Heart, Search, User, MapPin, Upload, Home, LogOut, LogIn } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { useAppStore } from '@/stores/app'
+import LoginModal from './LoginModal.vue'
+import RegisterModal from './RegisterModal.vue'
+
+const router = useRouter()
+const store = useAppStore()
+
+const showLoginModal = ref(false)
+const showRegisterModal = ref(false)
+
+const handleLogout = () => {
+  store.logout()
+  router.push('/')
+}
+
+const switchToRegister = () => {
+  showLoginModal.value = false
+  showRegisterModal.value = true
+}
+
+const switchToLogin = () => {
+  showRegisterModal.value = false
+  showLoginModal.value = true
+}
 </script>
