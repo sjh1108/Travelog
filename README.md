@@ -45,12 +45,12 @@ API 명세서는 노션(Notion)을 통해 관리하고 있으며, Swagger를 통
 ### **Phase 1: 환경 설정 및 인증 (D-Day ~ D+2)**
 - [x] 프로젝트 생성 및 Git 레포지토리 초기화
 - [x] DB 설계 (ERD) 및 스키마 생성
-- [ ] Spring Security + JWT 기반 회원가입/로그인 구현
-- [ ] Vue.js 기본 레이아웃 구성
+- [x] Spring Security + JWT 기반 회원가입/로그인 구현
+- [x] Vue.js 기본 레이아웃 구성
 
 ### **Phase 2: 공공 데이터 및 지도 연동 (D+3 ~ D+6)**
-- [ ] 공공 데이터 API 연동 및 관광지 데이터 DB Batch 저장
-- [ ] Kakao Map API 연동 및 지도 출력
+- [x] 공공 데이터 API 연동 및 관광지 데이터 DB Batch 저장
+- [x] Kakao Map API 연동 및 지도 출력
 - [ ] 지역별/테마별 관광지 조회 및 필터링 기능
 
 ### **Phase 3: 핵심 기능 - 여행 기록 & SNS (D+7 ~ D+10)**
