@@ -5,16 +5,15 @@ import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface UserMapper {
-
-    // 1. 회원가입
+    // 회원가입 (프로필 이미지, 바이오 추가)
     void insertUser(UserDto userDto);
 
-    // 2. 로그인용 회원 조회 (비밀번호 검증을 위해 사용)
+    // 이메일로 회원 조회
     UserDto selectUserByEmail(String email);
 
-    // 3. 이메일 중복 체크 (1: 존재함, 0: 사용 가능)
+    // 이메일 중복 체크
     int existsByEmail(String email);
 
-    // 4. 닉네임 중복 체크
+    // 닉네임 중복 체크
     int existsByNickname(String nickname);
 }

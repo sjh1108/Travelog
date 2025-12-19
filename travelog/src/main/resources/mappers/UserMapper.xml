@@ -4,30 +4,23 @@
 
 <mapper namespace="com.ssafy.travelog.model.mapper.UserMapper">
 
-    <insert id="insertUser" parameterType="UserDto" useGeneratedKeys="true" keyProperty="userId">
-        INSERT INTO users (email, password, nickname, role, created_at)
-        VALUES (#{email}, #{password}, #{nickname}, 'ROLE_USER', now())
+    <insert id="insertUser" parameterType="UserDto">
+        INSERT INTO Users (email, password, nickname, profile_image, bio)
+        VALUES (#{email}, #{password}, #{nickname}, #{profileImage}, #{bio})
     </insert>
 
     <select id="selectUserByEmail" parameterType="String" resultType="UserDto">
-        SELECT
-            user_id,
-            email,
-            password,
-            nickname,
-            profile_image,
-            role,
-            created_at
-        FROM users
+        SELECT id, email, password, nickname, profile_image, bio, created_at, updated_at
+        FROM Users
         WHERE email = #{email}
     </select>
 
     <select id="existsByEmail" parameterType="String" resultType="int">
-        SELECT count(*) FROM users WHERE email = #{email}
+        SELECT COUNT(*) FROM Users WHERE email = #{email}
     </select>
 
     <select id="existsByNickname" parameterType="String" resultType="int">
-        SELECT count(*) FROM users WHERE nickname = #{nickname}
+        SELECT COUNT(*) FROM Users WHERE nickname = #{nickname}
     </select>
 
 </mapper>
