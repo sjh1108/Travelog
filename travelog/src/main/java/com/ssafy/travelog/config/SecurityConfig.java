@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 로그인, 회원가입 허용
                         .requestMatchers("/api/users/join", "/api/users/login").permitAll()
+                        .requestMatchers("/images/**").permitAll()
 
                         // [중요] 여행 관련 모든 하위 주소 허용 (details 포함)
                         .requestMatchers("/api/travels/**").authenticated()
@@ -46,11 +47,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/posts/**").authenticated()
                         .requestMatchers("/api/comments/**").authenticated()
                         .requestMatchers("/api/likes/**").authenticated()
+                        .requestMatchers("/api/files/**").authenticated()
 
                         // Swagger 등 나머지 허용
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
+
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
