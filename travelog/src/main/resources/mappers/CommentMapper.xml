@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.travelog.model.mapper.CommentMapper">
+
+    <insert id="insertComment" parameterType="commentDto">
+        INSERT INTO Comments (post_id, user_id, content)
+        VALUES (
+                   #{postId},
+                   (SELECT id FROM Users WHERE email = #{userEmail}),
+                   #{content}
+               )
+    </insert>
+
+    <select id="selectCommentsByPostId" resultType="commentDto">
+        SELECT
+            c.id,
+            c.post_id AS postId,
+            u.email AS userEmail,
+            u.nickname,
+            c.content,
+            c.created_at AS createdAt
+        FROM Comments c
+                 JOIN Users u ON c.user_id = u.id
+        WHERE c.post_id = #{postId}
+        ORDER BY c.created_at ASC
+    </select>
+
+    <delete id="deleteComment">
+        DELETE FROM Comments
+        WHERE id = #{id}
+          AND user_id = (SELECT id FROM Users WHERE email = #{userEmail})
+    </delete>
+
+</mapper>

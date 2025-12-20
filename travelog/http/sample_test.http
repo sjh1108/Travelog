@@ -92,3 +92,21 @@ Authorization: Bearer {{authToken}}
 ### 9. 특정 여행의 상세 일정 조회
 GET {{host}}/api/travels/1/details
 Authorization: Bearer {{authToken}}
+
+### 10. 댓글 작성 (1번 게시물에)
+POST {{host}}/api/comments
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "postId": 1,
+  "content": "우와! 제주도 정말 가고 싶네요~ 👍"
+}
+
+### 11. 댓글 목록 조회 (1번 게시물)
+GET {{host}}/api/comments/1
+Authorization: Bearer {{authToken}}
+
+### 12. 댓글 삭제 (댓글 ID가 1번이라고 가정)
+DELETE {{host}}/api/comments/1
+Authorization: Bearer {{authToken}}
