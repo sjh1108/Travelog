@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/posts/**").authenticated()
                         .requestMatchers("/api/posts/**").authenticated()
                         .requestMatchers("/api/comments/**").authenticated()
+                        .requestMatchers("/api/likes/**").authenticated()
 
                         // Swagger 등 나머지 허용
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()

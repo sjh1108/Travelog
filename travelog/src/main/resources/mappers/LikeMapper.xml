@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.travelog.model.mapper.LikeMapper">
+
+    <select id="checkLike" parameterType="likeDto" resultType="int">
+        SELECT COUNT(*)
+        FROM Likes
+        WHERE post_id = #{postId}
+          AND user_id = (SELECT id FROM Users WHERE email = #{userEmail})
+    </select>
+
+    <insert id="doLike" parameterType="likeDto">
+        INSERT INTO Likes (post_id, user_id)
+        VALUES (
+                   #{postId},
+                   (SELECT id FROM Users WHERE email = #{userEmail})
+               )
+    </insert>
+
+    <delete id="unLike" parameterType="likeDto">
+        DELETE FROM Likes
+        WHERE post_id = #{postId}
+          AND user_id = (SELECT id FROM Users WHERE email = #{userEmail})
+    </delete>
+
+</mapper>
