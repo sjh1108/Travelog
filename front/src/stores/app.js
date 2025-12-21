@@ -3,10 +3,38 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useAppStore = defineStore('app', () => {
-  // Current user
-  const currentUser = ref(null)
+  // Auth
+  const authToken = ref(localStorage.getItem('authToken') || null)
+  const currentUser = ref(JSON.parse(localStorage.getItem('currentUser') || 'null'))
+
+  const isLoggedIn = computed(() => !!authToken.value)
+
+  // Modal state
+  const showLoginModal = ref(false)
+
+  const setAuthToken = (token) => {
+    authToken.value = token
+    if (token) {
+      localStorage.setItem('authToken', token)
+    } else {
+      localStorage.removeItem('authToken')
+    }
+  }
+
   const setCurrentUser = (user) => {
     currentUser.value = user
+    if (user) {
+      localStorage.setItem('currentUser', JSON.stringify(user))
+    } else {
+      localStorage.removeItem('currentUser')
+    }
+  }
+
+  const logout = () => {
+    authToken.value = null
+    currentUser.value = null
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('currentUser')
   }
 
   // Posts
@@ -81,8 +109,13 @@ export const useAppStore = defineStore('app', () => {
   }
 
   return {
+    authToken,
     currentUser,
+    isLoggedIn,
+    setAuthToken,
     setCurrentUser,
+    logout,
+    showLoginModal,
     posts,
     setPosts,
     addPost,

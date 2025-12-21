@@ -2,10 +2,41 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
+import axios from 'axios'
+import { useAppStore } from './stores/app'
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
+
+// Axios 인터셉터 설정
+axios.interceptors.request.use(
+  (config) => {
+    const store = useAppStore()
+    if (store.authToken) {
+      config.headers.Authorization = `Bearer ${store.authToken}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
+// 401 에러 시 자동 로그아웃 및 로그인 모달 열기
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      const store = useAppStore()
+      store.logout()
+      store.showLoginModal = true
+      router.push('/map')
+    }
+    return Promise.reject(error)
+  }
+)
 
 app.mount('#app')

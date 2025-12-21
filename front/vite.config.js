@@ -11,6 +11,11 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      '/api/users': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
       '/api/tour': {
         target: 'https://apis.data.go.kr',
         changeOrigin: true,

@@ -18,6 +18,7 @@ CREATE TABLE Users (
     nickname VARCHAR(50) UNIQUE NOT NULL,
     profile_image VARCHAR(500),
     bio TEXT,
+    role VARCHAR(20) DEFAULT 'ROLE_USER',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_users_email (email),

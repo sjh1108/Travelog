@@ -493,10 +493,6 @@ const openFullImage = () => {
 const toggleMapMode = () => {
   isMyMap.value = !isMyMap.value;
 
-  console.log("Map mode toggled to:", isMyMap.value ? "My Map" : "Travel Map");
-  console.log("Map instance:", map.value);
-  console.log("Travel logs:", travelLogs.value);
-
   // 모드에 따라 마커 업데이트
   if (isMyMap.value) {
     updateMyMapMarkers();
@@ -507,9 +503,6 @@ const toggleMapMode = () => {
 
 // My Map 마커 업데이트 (내 게시물 위치 표시)
 const updateMyMapMarkers = () => {
-  console.log("Updating My Map markers...");
-  console.log("Number of travel logs:", travelLogs.value.length);
-
   // 기존 마커 제거
   markers.value.forEach((marker) => marker.setMap(null));
   markers.value = [];
@@ -525,19 +518,11 @@ const updateMyMapMarkers = () => {
   const positions = [];
 
   // 각 여행 로그에 대해 마커 생성
-  travelLogs.value.forEach((log, index) => {
+  travelLogs.value.forEach((log) => {
     const lat = log.latitude || 36.3504 + (Math.random() - 0.5) * 0.5;
     const lng = log.longitude || 127.3845 + (Math.random() - 0.5) * 0.5;
 
     positions.push({ lat, lng });
-
-    console.log(
-      `Creating marker ${index + 1} at:`,
-      lat,
-      lng,
-      "for",
-      log.locationName
-    );
 
     const markerPosition = new window.kakao.maps.LatLng(lat, lng);
     const marker = new window.kakao.maps.Marker({
@@ -579,8 +564,6 @@ const updateMyMapMarkers = () => {
     });
   });
 
-  console.log("Created markers:", markers.value.length);
-
   // 모든 마커가 보이도록 지도 범위 자동 조정
   if (positions.length > 0) {
     // 한국 내 위치인지 확인 (위도 33-43, 경도 124-132)
@@ -596,7 +579,6 @@ const updateMyMapMarkers = () => {
         bounds.extend(new window.kakao.maps.LatLng(pos.lat, pos.lng));
       });
       map.value.setBounds(bounds);
-      console.log("Map bounds updated for Korean locations");
     } else {
       // 해외 위치면 첫 번째 마커 중심으로 적절한 줌 레벨 설정
       const center = new window.kakao.maps.LatLng(
@@ -605,7 +587,6 @@ const updateMyMapMarkers = () => {
       );
       map.value.setCenter(center);
       map.value.setLevel(8); // 적절한 줌 레벨
-      console.log("Map centered at first marker with zoom level 8");
     }
   }
 };
