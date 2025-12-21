@@ -47,3 +47,4 @@ Desktop.ini
 # 실수로 AWS 키나 DB 비번이 깃허브에 올라가지 않게 주의하세요.
 # 중요한 설정 파일은 따로 관리하는 것이 좋습니다.
 # application-secret.properties
+/.metadata/
