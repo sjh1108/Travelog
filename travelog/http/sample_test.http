@@ -122,3 +122,15 @@ Authorization: Bearer {{authToken}}
 ### 15. 게시글 다시 조회 (likeCount가 변경되었는지 확인)
 GET {{host}}/api/posts
 Authorization: Bearer {{authToken}}
+
+### 16. 이미지 파일 업로드
+POST {{host}}/api/files/upload
+Content-Type: multipart/form-data; boundary=boundary
+Authorization: Bearer {{authToken}}
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="test-image.jpg"
+Content-Type: image/jpeg
+
+< C:\Users\User\Downloads\15d8a5038a7129363.jpg
+--boundary--
