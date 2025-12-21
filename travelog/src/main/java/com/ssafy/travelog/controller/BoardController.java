@@ -45,18 +45,18 @@ public class BoardController {
         }
     }
 
-    @Operation(summary = "게시글 전체 조회")
+    @Operation(summary = "게시물 목록 조회 (검색 기능 포함)")
     @GetMapping
-    public ResponseEntity<?> listPosts() {
-        try {
-            List<BoardDto> list = boardService.listPosts();
-            if (list == null || list.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 데이터가 없을 때 204
-            }
-            return new ResponseEntity<>(list, HttpStatus.OK); // 200 OK
-        } catch (Exception e) {
-            log.error("게시글 목록 조회 실패", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<?> list(
+            // [수정] keyword 파라미터 추가 (필수 아님)
+            @RequestParam(required = false) String keyword) {
+
+        log.debug("게시물 목록 조회 요청 - 검색어: {}", keyword);
+        List<BoardDto> list = boardService.getPostList(keyword);
+
+        if (list == null || list.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
+        return new ResponseEntity<>(list, HttpStatus.OK);
     }
 }

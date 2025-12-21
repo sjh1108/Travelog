@@ -38,8 +38,13 @@ Authorization: Bearer {{authToken}}
   "caption": "제주도 바다가 너무 예뻐요!"
 }
 
-### 4. 전체 게시물 조회
-GET {{host}}/api/posts
+### 4. 전체 게시물 조회 (검색어 없음)
+GET http://localhost:8080/api/posts
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+### 4-1. 검색 테스트 (제목이나 지역에 '제주'가 포함된 글)
+GET http://localhost:8080/api/posts?keyword=제주
 Accept: application/json
 Authorization: Bearer {{authToken}}
 

@@ -28,4 +28,27 @@
         ORDER BY p.created_at DESC
     </select>
 
+    <select id="selectPosts" resultType="boardDto">
+        SELECT
+        p.id,
+        p.user_id AS userId,
+        u.nickname,
+        u.profile_image AS profileImage,
+        p.image_url AS imageUrl,
+        p.travel_location AS travelLocation,
+        p.caption,
+        p.like_count AS likeCount,
+        p.created_at AS createdAt
+        FROM Posts p
+        JOIN Users u ON p.user_id = u.id
+
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (p.caption LIKE CONCAT('%', #{keyword}, '%')
+                OR p.travel_location LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+
+        ORDER BY p.id DESC
+    </select>
 </mapper>

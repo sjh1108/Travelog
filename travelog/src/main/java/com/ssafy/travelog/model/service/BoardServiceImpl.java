@@ -23,4 +23,9 @@ public class BoardServiceImpl implements BoardService {
     public List<BoardDto> listPosts() {
         return boardMapper.listPosts();
     }
+
+    @Override
+    public List<BoardDto> getPostList(String keyword) {
+        return boardMapper.selectPosts(keyword);
+    }
 }
