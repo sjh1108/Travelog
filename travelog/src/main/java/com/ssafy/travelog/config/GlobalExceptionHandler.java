@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -40,5 +41,15 @@ public class GlobalExceptionHandler {
                 .path(request.getRequestURI())
                 .build();
         return new ResponseEntity<>(errorResponse, status);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e, HttpServletRequest request) {
+        // 첫 번째 에러 메시지만 가져오기 (예: "비밀번호는 최소 4자 이상이어야 합니다.")
+        String errorMessage = e.getBindingResult().getFieldError().getDefaultMessage();
+
+        log.warn("유효성 검사 실패: {}", errorMessage);
+
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, errorMessage, request);
     }
 }

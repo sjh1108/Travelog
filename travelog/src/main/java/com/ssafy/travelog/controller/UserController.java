@@ -5,6 +5,7 @@ import com.ssafy.travelog.model.service.UserService;
 import com.ssafy.travelog.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,7 @@ public class UserController {
 
     @Operation(summary = "회원가입")
     @PostMapping("/join")
-    public ResponseEntity<?> join(@RequestBody UserDto userDto) {
+    public ResponseEntity<?> join(@Valid @RequestBody UserDto userDto) {
         try {
             log.debug("회원가입 요청: {}", userDto);
             userService.join(userDto);
