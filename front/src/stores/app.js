@@ -9,6 +9,9 @@ export const useAppStore = defineStore('app', () => {
 
   const isLoggedIn = computed(() => !!authToken.value)
 
+  // Modal state
+  const showLoginModal = ref(false)
+
   const setAuthToken = (token) => {
     authToken.value = token
     if (token) {
@@ -112,6 +115,7 @@ export const useAppStore = defineStore('app', () => {
     setAuthToken,
     setCurrentUser,
     logout,
+    showLoginModal,
     posts,
     setPosts,
     addPost,

@@ -25,14 +25,15 @@ axios.interceptors.request.use(
   }
 )
 
-// 401 에러 시 자동 로그아웃
+// 401 에러 시 자동 로그아웃 및 로그인 모달 열기
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       const store = useAppStore()
       store.logout()
-      router.push('/login')
+      store.showLoginModal = true
+      router.push('/map')
     }
     return Promise.reject(error)
   }

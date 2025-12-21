@@ -172,7 +172,7 @@ const handleLogin = async () => {
     })
 
     emit('update:modelValue', false)
-    router.push('/')
+    router.push('/map')
   } catch (error) {
     console.error('로그인 실패:', error)
     errorMessage.value = error.response?.data?.message || '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.'

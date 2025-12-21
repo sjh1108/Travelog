@@ -84,7 +84,7 @@
             </router-link>
 
             <button
-              @click="showLoginModal = true"
+              @click="store.showLoginModal = true"
               class="flex items-center gap-2 text-foreground transition-colors hover:text-primary"
               title="Login"
             >
@@ -105,7 +105,7 @@
 
     <!-- 로그인 모달 -->
     <LoginModal
-      v-model="showLoginModal"
+      v-model="store.showLoginModal"
       @switchToRegister="switchToRegister"
     />
 
@@ -128,7 +128,6 @@ import RegisterModal from './RegisterModal.vue'
 const router = useRouter()
 const store = useAppStore()
 
-const showLoginModal = ref(false)
 const showRegisterModal = ref(false)
 
 const handleLogout = () => {
@@ -137,12 +136,12 @@ const handleLogout = () => {
 }
 
 const switchToRegister = () => {
-  showLoginModal.value = false
+  store.showLoginModal = false
   showRegisterModal.value = true
 }
 
 const switchToLogin = () => {
   showRegisterModal.value = false
-  showLoginModal.value = true
+  store.showLoginModal = true
 }
 </script>

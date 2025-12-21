@@ -250,7 +250,7 @@ const handleRegister = async () => {
       store.setAuthToken(response.data.accessToken)
       store.setCurrentUser(response.data.user || formData.value)
       emit('update:modelValue', false)
-      router.push('/')
+      router.push('/map')
     } else {
       // 토큰이 없으면 로그인 모달로 전환
       emit('update:modelValue', false)
