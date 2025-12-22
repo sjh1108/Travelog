@@ -40,6 +40,7 @@ public class SecurityConfig {
                         // 로그인, 회원가입 허용
                         .requestMatchers("/api/users/join", "/api/users/login").permitAll()
                         .requestMatchers("/images/**").permitAll()
+                        .requestMatchers("/api/files/upload").permitAll()
 
                         // 게시물 조회(GET)는 누구나 가능, 작성/수정/삭제는 인증 필요
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts/**").permitAll()
@@ -49,7 +50,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/travels/**").authenticated()
                         .requestMatchers("/api/comments/**").authenticated()
                         .requestMatchers("/api/likes/**").authenticated()
-                        .requestMatchers("/api/files/**").authenticated()
 
                         // Swagger 등 나머지 허용
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()

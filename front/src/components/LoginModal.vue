@@ -168,7 +168,7 @@ const handleLogin = async () => {
     store.setAuthToken(response.data.accessToken)
 
     // currentUser 설정 (id는 email 사용)
-    const user = response.data.user || {
+    let user = response.data.user || {
       id: formData.value.email,
       email: formData.value.email,
       nickname: response.data.nickname || '여행자',
@@ -178,9 +178,15 @@ const handleLogin = async () => {
 
     // user 객체에 id가 없으면 email을 id로 사용
     if (user && !user.id) {
-      user.id = user.email
+      user.id = user.email || formData.value.email
     }
 
+    // profileImage가 없으면 기본값 설정
+    if (!user.profileImage) {
+      user.profileImage = '/default-profile.svg'
+    }
+
+    console.log('로그인 성공 - 사용자 정보:', user)
     store.setCurrentUser(user)
 
     emit('update:modelValue', false)

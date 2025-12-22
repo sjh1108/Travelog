@@ -40,7 +40,17 @@ export function getFullImageUrl(imageUrl) {
  */
 export function getProfileImageUrl(imageUrl) {
   // 빈 값이거나 placeholder인 경우 기본 프로필 이미지 반환
-  if (!imageUrl || imageUrl === '/placeholder.svg' || imageUrl === 'placeholder.svg') {
+  if (!imageUrl ||
+      imageUrl === '' ||
+      imageUrl === '/placeholder.svg' ||
+      imageUrl === 'placeholder.svg' ||
+      imageUrl === 'null' ||
+      imageUrl === 'undefined') {
+    return '/default-profile.svg'
+  }
+
+  // 이미 기본 프로필 이미지인 경우 그대로 반환
+  if (imageUrl === '/default-profile.svg' || imageUrl === 'default-profile.svg') {
     return '/default-profile.svg'
   }
 

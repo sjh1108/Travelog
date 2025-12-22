@@ -55,11 +55,15 @@
 
             <router-link
               to="/mypage"
-              class="flex items-center gap-2 text-foreground transition-colors hover:text-primary"
+              class="flex items-center gap-2 text-foreground transition-colors hover:opacity-80"
               title="My Page"
             >
-              <User class="h-6 w-6" />
-              <span class="hidden sm:inline">Profile</span>
+              <img
+                :src="userProfileImage"
+                :alt="store.currentUser?.nickname || 'User'"
+                class="h-8 w-8 rounded-full object-cover border-2 border-border hover:border-primary transition-colors"
+              />
+              <span class="hidden sm:inline hover:text-primary transition-colors">Profile</span>
             </router-link>
 
             <button
@@ -118,10 +122,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Heart, Search, User, MapPin, Upload, Home, LogOut, LogIn } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+import { getProfileImageUrl } from '@/utils/imageUtils'
 import LoginModal from './LoginModal.vue'
 import RegisterModal from './RegisterModal.vue'
 
@@ -129,6 +134,11 @@ const router = useRouter()
 const store = useAppStore()
 
 const showRegisterModal = ref(false)
+
+// 프로필 이미지
+const userProfileImage = computed(() =>
+  getProfileImageUrl(store.currentUser?.profileImage)
+)
 
 const handleLogout = () => {
   store.logout()
