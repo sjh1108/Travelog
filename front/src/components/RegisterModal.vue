@@ -248,7 +248,19 @@ const handleRegister = async () => {
     // 회원가입 성공 후 자동 로그인
     if (response.data.accessToken) {
       store.setAuthToken(response.data.accessToken)
-      store.setCurrentUser(response.data.user || formData.value)
+
+      // currentUser 설정 (id는 email 사용)
+      const user = response.data.user || {
+        ...formData.value,
+        id: formData.value.email
+      }
+
+      // user 객체에 id가 없으면 email을 id로 사용
+      if (user && !user.id) {
+        user.id = user.email
+      }
+
+      store.setCurrentUser(user)
       emit('update:modelValue', false)
       router.push('/map')
     } else {

@@ -11,7 +11,7 @@
             <h2 class="text-xl font-bold mb-4">Profile</h2>
             <div class="flex items-start gap-6">
               <img
-                :src="store.currentUser.profileImage || '/placeholder.svg'"
+                :src="userProfileImage"
                 :alt="store.currentUser.nickname"
                 class="w-24 h-24 rounded-full object-cover"
               />
@@ -50,7 +50,7 @@
                 class="aspect-square"
               >
                 <img
-                  :src="post.imageUrl"
+                  :src="getImageUrl(post.imageUrl)"
                   :alt="post.travelLocation"
                   class="w-full h-full object-cover rounded-lg hover:opacity-90 transition-opacity"
                 />
@@ -92,16 +92,85 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import Navigation from '@/components/Navigation.vue'
 import Footer from '@/components/Footer.vue'
 import { useAppStore } from '@/stores/app'
+import { postAPI } from '@/api/api'
+import { getFullImageUrl, getProfileImageUrl } from '@/utils/imageUtils'
 
 const store = useAppStore()
 
-const myPosts = computed(() => { 
+// 게시물 불러오기
+const fetchPosts = async () => {
+  try {
+    console.log('MyPage - 게시물 조회 시작...')
+    const data = await postAPI.getPosts()
+    console.log('MyPage - 받은 게시물 데이터:', data)
+
+    // 백엔드 응답을 프론트엔드 형식으로 변환
+    const postsWithUser = data.map(post => {
+      // 이미 user 객체가 있으면 그대로 사용
+      if (post.user) {
+        return post
+      }
+
+      // nickname, profileImage가 있으면 user 객체로 변환
+      if (post.nickname || post.profileImage || post.writerEmail) {
+        return {
+          ...post,
+          userId: post.writerEmail,
+          user: {
+            id: post.writerEmail,
+            email: post.writerEmail,
+            nickname: post.nickname || 'Unknown User',
+            profileImage: post.profileImage || '/default-profile.svg'
+          }
+        }
+      }
+
+      console.warn(`게시물 ${post.id}에 작성자 정보가 없습니다.`)
+      return post
+    })
+
+    console.log('MyPage - 처리된 게시물:', postsWithUser)
+    store.setPosts(postsWithUser)
+  } catch (error) {
+    console.error('MyPage - 게시물 조회 실패:', error)
+    console.error('MyPage - 에러 상세:', error.response)
+    store.setPosts([])
+  }
+}
+
+onMounted(async () => {
+  // 페이지 로드 시 게시물 불러오기
+  await fetchPosts()
+})
+
+const myPosts = computed(() => {
   if (!store.currentUser) return []
-  return store.posts.filter(post => post.userId === store.currentUser.id)
+
+  const currentUserId = store.currentUser.id || store.currentUser.email
+
+  console.log('MyPage - currentUser:', store.currentUser)
+  console.log('MyPage - currentUserId:', currentUserId)
+  console.log('MyPage - 전체 게시물:', store.posts)
+
+  const filtered = store.posts.filter(post => {
+    const match = post.userId === currentUserId ||
+           post.writerEmail === currentUserId ||
+           post.userId === store.currentUser.email ||
+           post.writerEmail === store.currentUser.email
+
+    if (match) {
+      console.log('매칭된 게시물:', post)
+    }
+
+    return match
+  })
+
+  console.log('MyPage - 내 게시물:', filtered)
+  return filtered
 })
 
 const totalLikes = computed(() => {
@@ -111,4 +180,8 @@ const totalLikes = computed(() => {
 const totalComments = computed(() => {
   return myPosts.value.reduce((sum, post) => sum + post.commentCount, 0)
 })
+
+// 이미지 URL 처리
+const getImageUrl = getFullImageUrl
+const userProfileImage = computed(() => getProfileImageUrl(store.currentUser?.profileImage))
 </script>

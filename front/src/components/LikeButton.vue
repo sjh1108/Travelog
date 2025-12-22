@@ -35,6 +35,7 @@
 import { ref, computed } from 'vue'
 import { Heart } from 'lucide-vue-next'
 import { useAppStore } from '@/stores/app'
+import { likeAPI } from '@/api/api'
 
 const props = defineProps({
   postId: String,
@@ -47,11 +48,20 @@ const animateCount = ref(false)
 const isLiked = computed(() => store.likedPosts.has(props.postId))
 const likeCount = computed(() => props.initialLikeCount + (isLiked.value ? 1 : 0))
 
-const handleLikeClick = () => {
-  store.toggleLike(props.postId)
-  animateCount.value = true
-  setTimeout(() => {
-    animateCount.value = false
-  }, 600)
+const handleLikeClick = async () => {
+  try {
+    // API 호출
+    await likeAPI.toggleLike(props.postId)
+
+    // 로컬 상태 업데이트
+    store.toggleLike(props.postId)
+
+    animateCount.value = true
+    setTimeout(() => {
+      animateCount.value = false
+    }, 600)
+  } catch (error) {
+    console.error('좋아요 토글 실패:', error)
+  }
 }
 </script>

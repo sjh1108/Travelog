@@ -23,11 +23,11 @@
           >
             <!-- User Avatar -->
             <router-link
-              :to="`/profile/${notification.userId}`"
+              :to="getProfileLink(notification.userId)"
               @click.stop
             >
               <img
-                :src="notification.user.profileImage || '/placeholder.svg'"
+                :src="notification.user.profileImage || '/default-profile.svg'"
                 :alt="notification.user.nickname"
                 class="w-12 h-12 rounded-full object-cover ring-2 ring-border"
               />
@@ -39,7 +39,7 @@
                 <div class="flex-1">
                   <p class="text-sm">
                     <router-link
-                      :to="`/profile/${notification.userId}`"
+                      :to="getProfileLink(notification.userId)"
                       class="font-bold hover:underline"
                       @click.stop
                     >
@@ -96,8 +96,10 @@ import { useRouter } from 'vue-router'
 import Navigation from '@/components/Navigation.vue'
 import Footer from '@/components/Footer.vue'
 import { dummyNotifications } from '@/data/dummy-data'
+import { useAppStore } from '@/stores/app'
 
 const router = useRouter()
+const store = useAppStore()
 const notifications = ref([])
 
 onMounted(() => {
@@ -107,13 +109,28 @@ onMounted(() => {
   )
 })
 
+// 프로필 링크 계산 함수 (현재 사용자면 /mypage, 아니면 /profile/:id)
+const getProfileLink = (userId) => {
+  const currentUserId = store.currentUser?.id || store.currentUser?.email
+
+  // 현재 로그인된 사용자와 같으면 /mypage로 이동
+  if (currentUserId && (userId === currentUserId ||
+      userId === store.currentUser?.email ||
+      userId === store.currentUser?.id)) {
+    return '/mypage'
+  }
+
+  // 다른 사용자면 프로필 페이지로 이동
+  return `/profile/${userId}`
+}
+
 const handleNotificationClick = (notification) => {
   // Mark as read (in a real app, this would update the backend)
   notification.isRead = true
 
   // Navigate based on notification type
   if (notification.type === 'follow') {
-    router.push(`/profile/${notification.userId}`)
+    router.push(getProfileLink(notification.userId))
   } else if (notification.post) {
     router.push(`/post/${notification.postId}`)
   }

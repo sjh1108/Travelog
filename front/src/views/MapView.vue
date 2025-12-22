@@ -7,12 +7,21 @@
           <h1 class="text-3xl font-bold">
             {{ isMyMap ? "My Map" : "Travel Map" }}
           </h1>
-          <button
-            @click="toggleMapMode"
-            class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-          >
-            {{ isMyMap ? "Travel Map" : "My Map" }}
-          </button>
+          <div class="flex gap-2">
+            <button
+              v-if="store.isLoggedIn"
+              @click="showTravelForm = true"
+              class="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors"
+            >
+              + Create Travel
+            </button>
+            <button
+              @click="toggleMapMode"
+              class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              {{ isMyMap ? "Travel Map" : "My Map" }}
+            </button>
+          </div>
         </div>
         <!-- 이 자리에 관광지 정보를 지역별 원하는 콘텐츠 조회할 수 있는 메뉴 -->
         <!--<div v-if="!isMyMap" class="ml-[45%] mb-4">
@@ -23,20 +32,23 @@
           <div id="kakao-map" class="w-full h-[600px]"></div>
         </div>
 
-        <!-- Travel Logs  -->
+        <!-- Travel Logs (최근 3개) -->
         <div class="mt-8">
-          <h2 class="text-2xl font-bold mb-4">Your Travel Logs</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h2 class="text-2xl font-bold mb-4">Recent Travel Logs</h2>
+          <div v-if="recentTravelLogs.length === 0" class="text-center py-8 text-foreground/50">
+            No travel logs yet
+          </div>
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div
-              v-for="log in travelLogs"
+              v-for="log in recentTravelLogs"
               :key="log.id"
               class="bg-card border border-border rounded-lg p-4 hover:shadow-lg transition-shadow"
             >
-              <h3 class="font-bold mb-2">{{ log.locationName }}</h3>
+              <h3 class="font-bold mb-2">{{ log.title || log.locationName || 'Untitled' }}</h3>
               <p class="text-sm text-foreground/60 mb-2">
-                {{ formatDate(log.date) }}
+                {{ formatDate(log.startDate || log.date || log.visitDate) }}
               </p>
-              <p class="text-sm text-foreground/80">{{ log.description }}</p>
+              <p class="text-sm text-foreground/80">{{ log.review || log.description || 'No description' }}</p>
             </div>
           </div>
         </div>
@@ -157,6 +169,111 @@
         @click.stop
       />
     </div>
+
+    <!-- 여행 기록 작성 모달 -->
+    <div
+      v-if="showTravelForm"
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      @click="showTravelForm = false"
+    >
+      <div
+        class="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        @click.stop
+      >
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold">Create Travel Record</h2>
+            <button
+              @click="showTravelForm = false"
+              class="text-foreground/60 hover:text-foreground text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          <form @submit.prevent="handleCreateTravel" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Title *</label>
+              <input
+                v-model="travelForm.title"
+                type="text"
+                required
+                placeholder="Enter travel title"
+                class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">Start Date *</label>
+                <input
+                  v-model="travelForm.startDate"
+                  type="date"
+                  required
+                  class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">End Date *</label>
+                <input
+                  v-model="travelForm.endDate"
+                  type="date"
+                  required
+                  class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-2">Total Cost</label>
+              <input
+                v-model.number="travelForm.totalCost"
+                type="number"
+                placeholder="0"
+                class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-2">Theme</label>
+              <input
+                v-model="travelForm.theme"
+                type="text"
+                placeholder="e.g., Food tour, Sightseeing, Adventure"
+                class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
+              />
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input
+                v-model="travelForm.isPublic"
+                type="checkbox"
+                id="isPublic"
+                class="w-4 h-4"
+              />
+              <label for="isPublic" class="text-sm font-medium">Make this travel public</label>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+              <button
+                type="button"
+                @click="showTravelForm = false"
+                class="px-4 py-2 bg-background border border-border rounded-lg hover:bg-foreground/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                :disabled="isSubmitting"
+                class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {{ isSubmitting ? 'Creating...' : 'Create' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -167,7 +284,7 @@ import axios from "axios";
 import Navigation from "@/components/Navigation.vue";
 import Footer from "@/components/Footer.vue";
 import { useAppStore } from "@/stores/app";
-import { dummyTravelLogs } from "@/data/dummy-data";
+import { travelAPI } from "@/api/api";
 
 // ==================== State Variables ====================
 const store = useAppStore();
@@ -190,17 +307,67 @@ const showImageModal = ref(false); // 이미지 갤러리 모달 표시 여부
 const currentImageIndex = ref(0); // 현재 표시 중인 이미지 인덱스
 const showFullImage = ref(false); // 원본 이미지 전체화면 표시 여부
 
-// 여행 로그 초기화
-if (store.travelLogs.length === 0) {
-  store.setTravelLogs(dummyTravelLogs);
-}
+// 여행 기록 작성 폼 상태
+const showTravelForm = ref(false);
+const isSubmitting = ref(false);
+const travelForm = ref({
+  title: '',
+  startDate: '',
+  endDate: '',
+  totalCost: 0,
+  theme: '',
+  isPublic: true
+})
 
 // ==================== Computed & Utility Functions ====================
 const travelLogs = computed(() => store.travelLogs);
 
+// 최근 3개의 여행 로그만 가져오기
+const recentTravelLogs = computed(() => {
+  if (!travelLogs.value || travelLogs.value.length === 0) return [];
+
+  // 날짜를 기준으로 정렬 (최신순)
+  const sorted = [...travelLogs.value].sort((a, b) => {
+    const dateA = new Date(a.startDate || a.date || a.visitDate || 0);
+    const dateB = new Date(b.startDate || b.date || b.visitDate || 0);
+    return dateB - dateA;
+  });
+
+  // 최근 3개만 반환
+  return sorted.slice(0, 3);
+});
+
+// 여행 로그 불러오기 (내 여행 기록)
+const fetchMyTravelLogs = async () => {
+  try {
+    const data = await travelAPI.getMyTravels();
+    store.setTravelLogs(data);
+  } catch (error) {
+    console.error('내 여행 기록 조회 실패:', error);
+  }
+};
+
+// 전체 여행 기록 불러오기 (모든 공개 여행 기록)
+const fetchAllTravelLogs = async () => {
+  try {
+    const data = await travelAPI.getTravels();
+    store.setTravelLogs(data);
+  } catch (error) {
+    console.error('전체 여행 기록 조회 실패:', error);
+  }
+};
+
 // 날짜 포맷팅 (예: January 1, 2024)
 const formatDate = (dateString) => {
+  if (!dateString) return 'Date not available';
+
   const date = new Date(dateString);
+
+  // Invalid Date 체크
+  if (isNaN(date.getTime())) {
+    return 'Invalid date';
+  }
+
   return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -488,15 +655,54 @@ const openFullImage = () => {
   showFullImage.value = true;
 };
 
+// ==================== Travel Record Functions ====================
+// 여행 기록 작성
+const handleCreateTravel = async () => {
+  isSubmitting.value = true;
+
+  try {
+    const newTravel = await travelAPI.createTravel(travelForm.value);
+
+    // 성공 후 폼 초기화
+    travelForm.value = {
+      title: '',
+      startDate: '',
+      endDate: '',
+      totalCost: 0,
+      theme: '',
+      isPublic: true
+    };
+
+    // 모달 닫기
+    showTravelForm.value = false;
+
+    // 여행 기록 다시 불러오기
+    await fetchMyTravelLogs();
+
+    alert('Travel record created successfully!');
+  } catch (error) {
+    console.error('여행 기록 작성 실패:', error);
+    alert('Failed to create travel record. Please try again.');
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
 // ==================== Map Mode Toggle ====================
 // 맵 모드 토글 함수
-const toggleMapMode = () => {
+const toggleMapMode = async () => {
   isMyMap.value = !isMyMap.value;
 
-  // 모드에 따라 마커 업데이트
+  // 모드에 따라 여행 기록 불러오기 및 마커 업데이트
   if (isMyMap.value) {
+    // My Map: 내 여행 기록 불러오기
+    if (store.isLoggedIn) {
+      await fetchMyTravelLogs();
+    }
     updateMyMapMarkers();
   } else {
+    // Travel Map: 전체 공개 여행 기록 불러오기
+    await fetchAllTravelLogs();
     updateMapMarkers(touristSpots.value);
   }
 };
@@ -650,6 +856,11 @@ const createMyMapInfoWindowContent = (log) => {
 // 컴포넌트 마운트 시 카카오맵 초기화
 onMounted(async () => {
   try {
+    // 여행 로그 불러오기
+    if (store.isLoggedIn) {
+      await fetchMyTravelLogs();
+    }
+
     await loadKakaoMapScript();
     initializeMap();
   } catch (error) {

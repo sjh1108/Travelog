@@ -166,10 +166,22 @@ const handleLogin = async () => {
     const response = await axios.post('/api/users/login', formData.value)
 
     store.setAuthToken(response.data.accessToken)
-    store.setCurrentUser(response.data.user || {
+
+    // currentUser 설정 (id는 email 사용)
+    const user = response.data.user || {
+      id: formData.value.email,
       email: formData.value.email,
       nickname: response.data.nickname || '여행자',
-    })
+      profileImage: response.data.profileImage || '/default-profile.svg',
+      bio: response.data.bio || ''
+    }
+
+    // user 객체에 id가 없으면 email을 id로 사용
+    if (user && !user.id) {
+      user.id = user.email
+    }
+
+    store.setCurrentUser(user)
 
     emit('update:modelValue', false)
     router.push('/map')

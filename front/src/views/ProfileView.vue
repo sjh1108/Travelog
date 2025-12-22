@@ -7,15 +7,15 @@
           <!-- Profile Header -->
           <div class="flex items-start gap-8">
             <img
-              :src="user.profileImage || '/placeholder.svg'"
-              :alt="user.nickname"
+              :src="userProfileImage"
+              :alt="user.nickname || 'User'"
               class="w-32 h-32 rounded-full object-cover"
             />
             <div class="flex-1">
               <div class="flex items-center gap-4 mb-4">
-                <h1 class="text-2xl font-bold">{{ user.nickname }}</h1>
+                <h1 class="text-2xl font-bold">{{ user.nickname || 'Unknown User' }}</h1>
                 <button
-                  v-if="user.id !== store.currentUser?.id"
+                  v-if="user.id !== store.currentUser?.id && user.email !== store.currentUser?.email"
                   @click="handleFollow"
                   :class="[
                     'px-6 py-2 rounded-lg font-semibold transition-colors',
@@ -27,24 +27,24 @@
                   {{ isFollowing ? 'Following' : 'Follow' }}
                 </button>
               </div>
-              
+
               <div class="flex gap-6 mb-4">
                 <div>
                   <span class="font-bold">{{ userPosts.length }}</span>
                   <span class="text-foreground/60 ml-1">posts</span>
                 </div>
                 <button @click="showFollowers = true">
-                  <span class="font-bold">{{ user.followerCount }}</span>
+                  <span class="font-bold">{{ user.followerCount || 0 }}</span>
                   <span class="text-foreground/60 ml-1">followers</span>
                 </button>
                 <button @click="showFollowing = true">
-                  <span class="font-bold">{{ user.followingCount }}</span>
+                  <span class="font-bold">{{ user.followingCount || 0 }}</span>
                   <span class="text-foreground/60 ml-1">following</span>
                 </button>
               </div>
-              
+
               <p class="text-foreground/80">
-                {{ user.bio }}
+                {{ user.bio || 'No bio' }}
               </p>
             </div>
           </div>
@@ -63,7 +63,7 @@
                 class="aspect-square"
               >
                 <img
-                  :src="post.imageUrl"
+                  :src="getImageUrl(post.imageUrl)"
                   :alt="post.travelLocation"
                   class="w-full h-full object-cover rounded-lg hover:opacity-90 transition-opacity"
                 />
@@ -87,14 +87,45 @@ import { useRoute } from 'vue-router'
 import Navigation from '@/components/Navigation.vue'
 import Footer from '@/components/Footer.vue'
 import { useAppStore } from '@/stores/app'
-import { dummyUsers, userPostsMap } from '@/data/dummy-data'
+import { getFullImageUrl, getProfileImageUrl } from '@/utils/imageUtils'
 
 const route = useRoute()
 const store = useAppStore()
 
 const userId = route.params.id
-const user = computed(() => dummyUsers[userId])
-const userPosts = computed(() => userPostsMap[userId] || [])
+
+// 게시물에서 사용자 정보 추출 또는 현재 사용자 정보 사용
+const user = computed(() => {
+  // userId가 현재 사용자와 같으면 현재 사용자 정보 반환
+  if (userId === store.currentUser?.id || userId === store.currentUser?.email) {
+    return store.currentUser
+  }
+
+  // 게시물에서 해당 사용자의 정보 찾기
+  const userPost = store.posts.find(post =>
+    post.userId === userId ||
+    post.writerEmail === userId ||
+    post.user?.id === userId ||
+    post.user?.email === userId
+  )
+
+  if (userPost?.user) {
+    return userPost.user
+  }
+
+  console.warn('사용자 정보를 찾을 수 없습니다:', userId)
+  return null
+})
+
+// 해당 사용자의 게시물 필터링
+const userPosts = computed(() => {
+  return store.posts.filter(post =>
+    post.userId === userId ||
+    post.writerEmail === userId ||
+    post.user?.id === userId ||
+    post.user?.email === userId
+  )
+})
 
 const showFollowers = ref(false)
 const showFollowing = ref(false)
@@ -104,4 +135,8 @@ const isFollowing = computed(() => store.followingUsers.has(userId))
 const handleFollow = () => {
   store.toggleFollow(userId)
 }
+
+// 이미지 URL 처리
+const getImageUrl = getFullImageUrl
+const userProfileImage = computed(() => getProfileImageUrl(user.value?.profileImage))
 </script>

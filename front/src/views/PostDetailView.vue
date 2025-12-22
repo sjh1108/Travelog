@@ -8,27 +8,28 @@
             <!-- Image -->
             <div class="relative">
               <img
-                :src="post.imageUrl || '/placeholder.svg'"
+                :src="fullImageUrl"
                 :alt="post.travelLocation"
-                class="w-full h-full object-cover"
+                class="w-full object-cover"
+                style="max-height: 600px; min-height: 400px;"
               />
             </div>
 
             <!-- Content -->
-            <div class="flex flex-col">
+            <div class="flex flex-col" style="max-height: 600px;">
               <!-- Header -->
               <div class="flex items-center gap-3 p-4 border-b border-border">
-                <router-link :to="`/profile/${post.userId}`">
+                <router-link :to="profileLink">
                   <img
-                    :src="post.user.profileImage || '/placeholder.svg'"
-                    :alt="post.user.nickname"
+                    :src="userProfileImage"
+                    :alt="post.user?.nickname || 'User'"
                     class="w-10 h-10 rounded-full object-cover"
                   />
                 </router-link>
                 <div>
-                  <router-link :to="`/profile/${post.userId}`">
+                  <router-link :to="profileLink">
                     <h3 class="font-semibold hover:text-primary transition-colors">
-                      {{ post.user.nickname }}
+                      {{ post.user?.nickname || 'Unknown User' }}
                     </h3>
                   </router-link>
                   <p class="text-xs text-foreground/50">{{ post.travelLocation }}</p>
@@ -40,13 +41,13 @@
                 <!-- Caption -->
                 <div class="flex gap-3">
                   <img
-                    :src="post.user.profileImage || '/placeholder.svg'"
-                    :alt="post.user.nickname"
+                    :src="userProfileImage"
+                    :alt="post.user?.nickname || 'User'"
                     class="w-8 h-8 rounded-full"
                   />
                   <div>
                     <p class="text-sm">
-                      <span class="font-semibold">{{ post.user.nickname }}</span>
+                      <span class="font-semibold">{{ post.user?.nickname || 'Unknown User' }}</span>
                       <span class="ml-2 text-foreground/80">{{ post.caption }}</span>
                     </p>
                     <p class="text-xs text-foreground/50 mt-1">
@@ -62,13 +63,13 @@
                   class="flex gap-3"
                 >
                   <img
-                    :src="comment.user.profileImage || '/placeholder.svg'"
-                    :alt="comment.user.nickname"
+                    :src="getImageUrl(comment.user?.profileImage)"
+                    :alt="comment.user?.nickname || 'User'"
                     class="w-8 h-8 rounded-full"
                   />
                   <div>
                     <p class="text-sm">
-                      <span class="font-semibold">{{ comment.user.nickname }}</span>
+                      <span class="font-semibold">{{ comment.user?.nickname || 'Unknown User' }}</span>
                       <span class="ml-2 text-foreground/80">{{ comment.content }}</span>
                     </p>
                     <p class="text-xs text-foreground/50 mt-1">
@@ -127,26 +128,97 @@ import Navigation from '@/components/Navigation.vue'
 import Footer from '@/components/Footer.vue'
 import LikeButton from '@/components/LikeButton.vue'
 import { useAppStore } from '@/stores/app'
-import { dummyComments } from '@/data/dummy-data'
+import { getFullImageUrl, getProfileImageUrl } from '@/utils/imageUtils'
+import { commentAPI, postAPI } from '@/api/api'
 
 const route = useRoute()
 const store = useAppStore()
 
 const postId = route.params.id
 const newComment = ref('')
+const localComments = ref([]) // 로컬에 댓글 저장
 
-const post = computed(() => store.posts.find((p) => p.id === postId))
-const comments = computed(() => store.getComments(postId))
+// 게시물 불러오기
+const fetchPosts = async () => {
+  try {
+    console.log('PostDetail - 게시물 조회 시작...')
+    const data = await postAPI.getPosts()
+    console.log('PostDetail - 받은 게시물 데이터:', data)
 
-onMounted(() => {
-  // Load dummy comments if available
-  if (dummyComments[postId]) {
-    dummyComments[postId].forEach(comment => {
-      if (!comments.value.find(c => c.id === comment.id)) {
-        store.addComment(postId, comment)
+    // 백엔드 응답을 프론트엔드 형식으로 변환
+    const postsWithUser = data.map(post => {
+      if (post.user) {
+        return post
       }
+
+      if (post.nickname || post.profileImage || post.writerEmail) {
+        return {
+          ...post,
+          userId: post.writerEmail,
+          user: {
+            id: post.writerEmail,
+            email: post.writerEmail,
+            nickname: post.nickname || 'Unknown User',
+            profileImage: post.profileImage || '/default-profile.svg'
+          }
+        }
+      }
+
+      console.warn(`게시물 ${post.id}에 작성자 정보가 없습니다.`)
+      return post
     })
+
+    console.log('PostDetail - 처리된 게시물:', postsWithUser)
+    store.setPosts(postsWithUser)
+  } catch (error) {
+    console.error('PostDetail - 게시물 조회 실패:', error)
+    console.error('PostDetail - 에러 상세:', error.response)
+    store.setPosts([])
   }
+}
+
+// ID 타입 변환 (문자열 또는 숫자 모두 지원)
+const post = computed(() => {
+  return store.posts.find((p) => {
+    return p.id === postId || p.id === Number(postId) || String(p.id) === postId
+  })
+})
+const comments = computed(() => localComments.value)
+
+// 프로필 링크 계산 (현재 사용자면 /mypage, 아니면 /profile/:id)
+const profileLink = computed(() => {
+  if (!post.value) return '/feed'
+
+  const postUserId = post.value.userId || post.value.writerEmail || post.value.user?.id || post.value.user?.email
+  const currentUserId = store.currentUser?.id || store.currentUser?.email
+
+  // postUserId가 없으면 기본값 반환
+  if (!postUserId) {
+    return '/feed'
+  }
+
+  // 현재 로그인된 사용자와 게시물 작성자가 같으면 /mypage로 이동
+  if (currentUserId && (postUserId === currentUserId ||
+      postUserId === store.currentUser?.email ||
+      postUserId === store.currentUser?.id)) {
+    return '/mypage'
+  }
+
+  // 다른 사용자면 프로필 페이지로 이동
+  return `/profile/${postUserId}`
+})
+
+// 이미지 URL 처리
+const fullImageUrl = computed(() => post.value ? getFullImageUrl(post.value.imageUrl) : '/placeholder.svg')
+const userProfileImage = computed(() => post.value ? getProfileImageUrl(post.value.user?.profileImage) : '/default-profile.svg')
+
+// 템플릿에서 사용할 수 있도록 노출 (댓글 작성자 프로필 이미지용)
+const getImageUrl = getProfileImageUrl
+
+onMounted(async () => {
+  // Load posts first, then comments
+  await fetchPosts()
+  await fetchComments()
 })
 
 const formatDate = (dateString) => {
@@ -158,19 +230,65 @@ const formatDate = (dateString) => {
   })
 }
 
-const handleAddComment = () => {
+// 댓글 목록 다시 불러오기
+const fetchComments = async () => {
+  if (!post.value?.id) return
+
+  try {
+    const data = await commentAPI.getComments(post.value.id)
+    console.log('댓글 조회 응답:', data)
+
+    // 백엔드 응답을 프론트엔드 형식으로 변환
+    const commentsWithUser = data.map(comment => {
+      if (comment.user) return comment
+
+      if (comment.nickname || comment.profileImage || comment.writerEmail) {
+        return {
+          ...comment,
+          userId: comment.writerEmail || comment.userId,
+          user: {
+            id: comment.writerEmail || comment.userId,
+            email: comment.writerEmail || comment.userId,
+            nickname: comment.nickname || 'Unknown User',
+            profileImage: comment.profileImage || '/default-profile.svg'
+          }
+        }
+      }
+
+      return comment
+    })
+
+    console.log('변환된 댓글 목록:', commentsWithUser)
+
+    // 로컬 ref에 직접 저장
+    localComments.value = commentsWithUser
+
+    console.log('localComments 업데이트 후:', localComments.value)
+  } catch (error) {
+    console.error('댓글 조회 실패:', error)
+  }
+}
+
+const handleAddComment = async () => {
   if (!newComment.value.trim() || !store.currentUser || !post.value) return
 
-  const comment = {
-    id: `comment-${Date.now()}`,
-    postId: post.value.id,
-    userId: store.currentUser.id,
-    user: store.currentUser,
-    content: newComment.value.trim(),
-    createdAt: new Date().toISOString(),
-  }
+  try {
+    const commentData = {
+      postId: post.value.id,
+      content: newComment.value.trim(),
+    }
 
-  store.addComment(post.value.id, comment)
-  newComment.value = ''
+    console.log('댓글 작성 요청:', commentData)
+    const newCommentData = await commentAPI.createComment(commentData)
+    console.log('댓글 작성 응답:', newCommentData)
+
+    // 댓글 목록 다시 불러오기
+    await fetchComments()
+
+    newComment.value = ''
+  } catch (error) {
+    console.error('댓글 작성 실패:', error)
+    console.error('에러 응답:', error.response)
+  }
 }
 </script>

@@ -41,10 +41,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/join", "/api/users/login").permitAll()
                         .requestMatchers("/images/**").permitAll()
 
+                        // 게시물 조회(GET)는 누구나 가능, 작성/수정/삭제는 인증 필요
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts/**").permitAll()
+                        .requestMatchers("/api/posts/**").authenticated()
+
                         // [중요] 여행 관련 모든 하위 주소 허용 (details 포함)
                         .requestMatchers("/api/travels/**").authenticated()
-                        .requestMatchers("/api/posts/**").authenticated()
-                        .requestMatchers("/api/posts/**").authenticated()
                         .requestMatchers("/api/comments/**").authenticated()
                         .requestMatchers("/api/likes/**").authenticated()
                         .requestMatchers("/api/files/**").authenticated()
