@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/travels/**").authenticated()
                         .requestMatchers("/api/comments/**").authenticated()
                         .requestMatchers("/api/likes/**").authenticated()
+                        .requestMatchers("/api/notifications/**").authenticated()
 
                         // Swagger 등 나머지 허용
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()
@@ -68,7 +69,7 @@ public class SecurityConfig {
 
         // Vue.js 개발 서버 주소 허용
         config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:8080"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true); // 쿠키/인증정보 포함 허용
 

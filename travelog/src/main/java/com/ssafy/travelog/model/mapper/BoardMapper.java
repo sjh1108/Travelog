@@ -10,4 +10,7 @@ public interface BoardMapper {
     // DB에 게시글 저장
     void insertBoard(BoardDto boardDto);
     List<BoardDto> listPosts();
+
+    // 특정 게시물의 작성자 이메일 조회
+    String getPostWriterEmail(int postId);
 }

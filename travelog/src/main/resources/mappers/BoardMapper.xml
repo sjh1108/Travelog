@@ -28,4 +28,11 @@
         ORDER BY p.created_at DESC
     </select>
 
+    <select id="getPostWriterEmail" resultType="string">
+        SELECT u.email
+        FROM Posts p
+        JOIN Users u ON p.user_id = u.id
+        WHERE p.id = #{postId}
+    </select>
+
 </mapper>

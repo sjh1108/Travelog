@@ -110,3 +110,36 @@ export const fileAPI = {
     return response.data
   }
 }
+
+// 알림 API
+export const notificationAPI = {
+  // 내 알림 목록 조회
+  getNotifications: async () => {
+    const response = await axios.get(`${API_BASE_URL}/notifications`)
+    return response.data
+  },
+
+  // 읽지 않은 알림 개수 조회
+  getUnreadCount: async () => {
+    const response = await axios.get(`${API_BASE_URL}/notifications/unread-count`)
+    return response.data
+  },
+
+  // 알림 읽음 처리
+  markAsRead: async (notificationId) => {
+    const response = await axios.patch(`${API_BASE_URL}/notifications/${notificationId}/read`)
+    return response.data
+  },
+
+  // 알림 전체 읽음 처리
+  markAllAsRead: async () => {
+    const response = await axios.patch(`${API_BASE_URL}/notifications/read-all`)
+    return response.data
+  },
+
+  // 알림 삭제
+  deleteNotification: async (notificationId) => {
+    const response = await axios.delete(`${API_BASE_URL}/notifications/${notificationId}`)
+    return response.data
+  }
+}
