@@ -38,7 +38,11 @@
     <!-- Actions -->
     <div class="flex items-center gap-4 p-4 border-b border-border">
       <!-- Like Button Component -->
-      <LikeButton :post-id="post.id" :initial-like-count="post.likeCount" />
+      <LikeButton
+        :post-id="post.id"
+        :initial-like-count="post.likeCount"
+        :initial-is-liked="post.isLiked"
+      />
 
       <button
         @click="onCommentClick(post.id)"
@@ -98,6 +102,11 @@ const props = defineProps({
 })
 
 const store = useAppStore()
+
+// 디버깅: PostCard에서 받은 post 데이터 확인
+console.log('PostCard - post.id:', props.post.id)
+console.log('PostCard - isLiked:', props.post.isLiked)
+console.log('PostCard - likeCount:', props.post.likeCount)
 
 const commentCount = computed(() => {
   const comments = store.getComments(props.post.id)

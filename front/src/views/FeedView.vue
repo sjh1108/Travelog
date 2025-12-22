@@ -70,6 +70,9 @@ const fetchPosts = async () => {
 
     // 백엔드 응답을 프론트엔드 형식으로 변환
     const postsWithUser = data.map(post => {
+      console.log('게시물 원본 데이터:', post)
+      console.log('isLiked:', post.isLiked, 'likeCount:', post.likeCount)
+
       // 이미 user 객체가 있으면 그대로 사용
       if (post.user) {
         return post

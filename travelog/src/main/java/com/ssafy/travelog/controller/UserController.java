@@ -30,7 +30,19 @@ public class UserController {
         try {
             log.debug("회원가입 요청: {}", userDto);
             userService.join(userDto);
-            return new ResponseEntity<>("회원가입 성공", HttpStatus.CREATED);
+
+            // 회원가입 후 자동 로그인을 위한 토큰 발급
+            String token = jwtUtil.createToken(userDto.getEmail(), userDto.getNickname());
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "회원가입 성공");
+            result.put("accessToken", token);
+            result.put("nickname", userDto.getNickname());
+            result.put("profileImage", userDto.getProfileImage());
+            result.put("bio", userDto.getBio());
+
+            log.info("회원가입 성공 및 토큰 발급: {}", userDto.getEmail());
+            return new ResponseEntity<>(result, HttpStatus.CREATED);
         } catch (Exception e) {
             log.error("회원가입 실패: {}", e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -48,6 +60,8 @@ public class UserController {
             result.put("message", "로그인 성공");
             result.put("accessToken", token);
             result.put("nickname", loginUser.getNickname());
+            result.put("profileImage", loginUser.getProfileImage());
+            result.put("bio", loginUser.getBio());
 
             log.info("로그인 성공 및 토큰 발급: {}", loginUser.getEmail());
             return new ResponseEntity<>(result, HttpStatus.OK);

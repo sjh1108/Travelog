@@ -1,5 +1,6 @@
 package com.ssafy.travelog.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
@@ -13,6 +14,9 @@ public class BoardDto {
     private int likeCount;        // 좋아요 수
     private int commentCount;     // 댓글 수
     private String createdAt;     // 작성일
+
+    @JsonProperty("isLiked")
+    private Boolean isLiked;      // 현재 사용자의 좋아요 여부
     // -------------------------------
 
     private String imageUrl;
