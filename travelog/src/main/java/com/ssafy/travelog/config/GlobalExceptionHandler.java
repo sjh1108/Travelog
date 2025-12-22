@@ -52,4 +52,11 @@ public class GlobalExceptionHandler {
 
         return buildErrorResponse(HttpStatus.BAD_REQUEST, errorMessage, request);
     }
+
+    // [추가] 권한 없음 (내 글이 아님)
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ErrorResponse> handleSecurityException(SecurityException e, HttpServletRequest request) {
+        log.warn("권한 오류: {}", e.getMessage());
+        return buildErrorResponse(HttpStatus.FORBIDDEN, e.getMessage(), request);
+    }
 }

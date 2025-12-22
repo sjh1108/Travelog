@@ -45,18 +45,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtUtil.validateToken(token)) {
                 String email = jwtUtil.getEmail(token);
 
-                // 5. 유효하다면 Spring Security에 "이 사람 인증됨!" 도장 찍어주기
-                // (원래는 DB에서 UserDetails를 가져와야 하지만, 성능을 위해 여기서는 간단히 처리)
+                // [수정 포인트] 토큰에서 role 정보 꺼내기!
+                String role = jwtUtil.getRole(token);
+
+                // 혹시 role이 없을 경우를 대비해 기본값 설정 (선택사항)
+                if (role == null) role = "ROLE_USER";
+
+                // 5. 유효하다면 Spring Security에 인증 정보 저장
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         email,
                         null,
-                        List.of(new SimpleGrantedAuthority("ROLE_USER")) // 권한 부여
+                        // [수정 포인트] 하드코딩("ROLE_USER") 대신 가져온 role 변수 사용
+                        List.of(new SimpleGrantedAuthority(role))
                 );
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                log.info("인증 성공: {}", email);
+                log.info("인증 성공: {} / 권한: {}", email, role);
             }
         } catch (Exception e) {
             log.error("인증 실패: {}", e.getMessage());

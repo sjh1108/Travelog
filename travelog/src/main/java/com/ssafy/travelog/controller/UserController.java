@@ -43,7 +43,7 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody UserDto userDto) {
         try {
             UserDto loginUser = userService.login(userDto);
-            String token = jwtUtil.createToken(loginUser.getEmail(), loginUser.getNickname());
+            String token = jwtUtil.createToken(loginUser.getEmail(), loginUser.getNickname(), loginUser.getRole());
 
             Map<String, Object> result = new HashMap<>();
             result.put("message", "로그인 성공");

@@ -25,12 +25,12 @@ public class JwtUtil {
     }
 
     // 1. 토큰 생성 (로그인 성공 시 호출)
-    public String createToken(String email, String nickname) {
+    public String createToken(String email, String nickname, String role) {
         return Jwts.builder()
                 .header().add("typ", "JWT").and() // 헤더: 타입 명시
                 .subject(email)                   // 내용: 사용자 식별값 (이메일)
                 .claim("nickname", nickname)      // 내용: 닉네임 추가
-                .claim("role", "ROLE_USER")       // 내용: 권한 추가
+                .claim("role", role) // [추가] 토큰에 역할 정보 저장
                 .issuedAt(new Date())             // 발행 시간
                 .expiration(new Date(System.currentTimeMillis() + expiration)) // 만료 시간
                 .signWith(secretKey)              // 서명 (비밀키로 암호화)
@@ -59,5 +59,15 @@ public class JwtUtil {
             // 토큰이 만료되었거나, 조작되었거나, 형식이 잘못된 경우
             return false;
         }
+    }
+
+    // [추가] 4. 토큰에서 역할(Role) 추출
+    public String getRole(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("role", String.class);
     }
 }
