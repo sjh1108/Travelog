@@ -22,9 +22,15 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
 
-        // 2. 비밀번호 암호화 (보안 필수!)
+        // 2. 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(userDto.getPassword());
         userDto.setPassword(encodedPassword);
+
+        // 3. [추가] 역할(Role) 설정
+        // (만약 관리자 가입 로직이 따로 없다면, 기본적으로 ROLE_USER로 세팅)
+        if (userDto.getRole() == null || userDto.getRole().isEmpty()) {
+            userDto.setRole("ROLE_USER");
+        }
 
         // 3. DB 저장
         userMapper.insertUser(userDto);
