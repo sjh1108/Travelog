@@ -7,7 +7,7 @@ public record ChatRequest(String model, List<Message> messages) {
     public static ChatRequest of(String content) {
         return new ChatRequest("gpt-4o-mini",
                 List.of(
-                        new Message("developer", "You are a helpful assistant."),
+                        new Message("system", "You are a helpful assistant."),
                         new Message("user", content)
                 )
         );

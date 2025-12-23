@@ -40,6 +40,7 @@ public class SecurityConfig {
                         // 로그인, 회원가입 허용
                         .requestMatchers("/api/users/join", "/api/users/login").permitAll()
                         .requestMatchers("/images/**").permitAll()
+                        .requestMatchers("/api/gms").permitAll()
 
                         // [중요] 여행 관련 모든 하위 주소 허용 (details 포함)
                         .requestMatchers("/api/travels/**").authenticated()

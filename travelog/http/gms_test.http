@@ -1,0 +1,4 @@
+### GMS 임시 테스트 요청
+
+GET http://localhost:8080/api/gms?prompt=SSAFY에 대해 알려줘
+Accept: text/plain
