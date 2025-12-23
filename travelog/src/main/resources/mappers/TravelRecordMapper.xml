@@ -6,7 +6,7 @@
 
     <insert id="insertRecord" parameterType="travelRecordDto">
         INSERT INTO Travel_Records
-            (user_id, title, start_date, end_date, total_cost, theme, is_public)
+            (user_id, title, start_date, end_date, total_cost, theme, is_public, image_urls)
         VALUES (
                        (SELECT id FROM Users WHERE email = #{userEmail}),
                        #{title},
@@ -14,7 +14,8 @@
                        #{endDate},
                        #{totalCost},
                        #{theme},
-                       #{isPublic}
+                       #{isPublic},
+                       #{imageUrls, typeHandler=com.ssafy.travelog.config.JsonListTypeHandler}
                )
     </insert>
 
@@ -29,6 +30,7 @@
             t.total_cost AS totalCost,
             t.theme,
             t.is_public AS isPublic,
+            t.image_urls AS imageUrls,
             t.created_at AS createdAt
         FROM Travel_Records t
                  JOIN Users u ON t.user_id = u.id
@@ -47,6 +49,7 @@
             t.total_cost AS totalCost,
             t.theme,
             t.is_public AS isPublic,
+            t.image_urls AS imageUrls,
             t.created_at AS createdAt
         FROM Travel_Records t
                  JOIN Users u ON t.user_id = u.id

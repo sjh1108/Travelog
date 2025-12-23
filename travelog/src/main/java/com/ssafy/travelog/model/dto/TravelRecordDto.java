@@ -2,6 +2,7 @@ package com.ssafy.travelog.model.dto;
 
 import lombok.Data;
 import java.math.BigDecimal; // 금액 계산용
+import java.util.List;
 
 @Data
 public class TravelRecordDto {
@@ -15,6 +16,7 @@ public class TravelRecordDto {
     private BigDecimal totalCost; // 총 경비
     private String theme;         // 여행 테마 (예: 힐링, 먹방)
     private boolean isPublic;     // 공개 여부 (true/false)
+    private List<String> imageUrls; // 여행 사진 URL 목록
 
     private String createdAt;     // 생성일
 }

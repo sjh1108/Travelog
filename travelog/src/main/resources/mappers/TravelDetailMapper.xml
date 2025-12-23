@@ -6,14 +6,17 @@
 
     <insert id="insertDetail" parameterType="travelDetailDto">
         INSERT INTO Travel_Details
-        (travel_record_id, tourist_spot_id, sequence_order, review, cost, visit_date, photos, latitude, longitude)
+        (travel_record_id, tourist_spot_id, sequence_order, location_name, description, review, cost, visit_date, image_urls, photos, latitude, longitude)
         VALUES (
                    #{travelRecordId},
                    #{touristSpotId},
                    #{sequenceOrder},
+                   #{locationName},
+                   #{description},
                    #{review},
                    #{cost},
                    #{visitDate},
+                   #{imageUrls, typeHandler=com.ssafy.travelog.config.JsonListTypeHandler},
                    #{photos},
                    #{latitude},
                    #{longitude}
@@ -26,9 +29,12 @@
             travel_record_id AS travelRecordId,
             tourist_spot_id AS touristSpotId,
             sequence_order AS sequenceOrder,
+            location_name AS locationName,
+            description,
             review,
             cost,
             visit_date AS visitDate,
+            image_urls AS imageUrls,
             photos,
             latitude,
             longitude

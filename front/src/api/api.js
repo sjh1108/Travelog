@@ -97,12 +97,27 @@ export const travelAPI = {
 
 // 파일 업로드 API
 export const fileAPI = {
-  // 이미지 업로드
+  // 이미지 업로드 (단일)
   uploadImage: async (file) => {
     const formData = new FormData()
     formData.append('file', file)
 
     const response = await axios.post(`${API_BASE_URL}/files/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  },
+
+  // 여러 이미지 업로드
+  uploadMultipleImages: async (files) => {
+    const formData = new FormData()
+    files.forEach((file) => {
+      formData.append('files', file)
+    })
+
+    const response = await axios.post(`${API_BASE_URL}/files/upload-multiple`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

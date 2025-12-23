@@ -48,17 +48,49 @@
             <div
               v-for="log in recentTravelLogs"
               :key="log.id"
-              class="bg-card border border-border rounded-lg p-4 hover:shadow-lg transition-shadow"
+              class="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+              @click="openTravelDetail(log)"
             >
-              <h3 class="font-bold mb-2">
-                {{ log.title || log.locationName || "Untitled" }}
-              </h3>
-              <p class="text-sm text-foreground/60 mb-2">
-                {{ formatDate(log.startDate || log.date || log.visitDate) }}
-              </p>
-              <p class="text-sm text-foreground/80">
-                {{ log.review || log.description || "No description" }}
-              </p>
+              <!-- 대표 이미지 썸네일 -->
+              <div class="relative w-full h-48 bg-muted">
+                <img
+                  :src="getFullImageUrl(log.imageUrls?.[0] || log.photos?.[0] || log.images?.[0])"
+                  :alt="log.title || 'Travel photo'"
+                  class="w-full h-full object-cover"
+                  @error="$event.target.src = '/placeholder.svg'"
+                />
+                <!-- 사진 개수 표시 -->
+                <div
+                  v-if="(log.imageUrls?.length || log.photos?.length || log.images?.length || 0) > 1"
+                  class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded"
+                >
+                  +{{ (log.imageUrls?.length || log.photos?.length || log.images?.length || 0) - 1 }} more
+                </div>
+              </div>
+
+              <!-- 내용 -->
+              <div class="p-4">
+                <h3 class="font-bold text-lg mb-2 line-clamp-1">
+                  {{ log.title || log.locationName || "Untitled" }}
+                </h3>
+                <p class="text-sm text-foreground/60 mb-2">
+                  {{ formatDate(log.startDate || log.date || log.visitDate) }}
+                  <span v-if="log.endDate && log.endDate !== log.startDate">
+                    ~ {{ formatDate(log.endDate) }}
+                  </span>
+                </p>
+                <p class="text-sm text-foreground/80 line-clamp-2 mb-3">
+                  {{ log.review || log.description || log.theme || "No description" }}
+                </p>
+
+                <!-- 상세보기 버튼 -->
+                <button
+                  @click.stop="openTravelDetail(log)"
+                  class="text-primary text-sm font-medium hover:underline"
+                >
+                  View Details →
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -192,7 +224,7 @@
       >
         <div class="p-6">
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold">Create Travel Record</h2>
+            <h2 class="text-2xl font-bold">여행 기록 작성</h2>
             <button
               @click="showTravelForm = false"
               class="text-foreground/60 hover:text-foreground text-2xl"
@@ -202,13 +234,59 @@
           </div>
 
           <form @submit.prevent="handleCreateTravel" class="space-y-4">
+            <!-- 이미지 업로드 영역 -->
             <div>
-              <label class="block text-sm font-medium mb-2">Title *</label>
+              <label class="block text-sm font-medium mb-2">사진</label>
+              <div
+                class="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
+                @click="triggerFileInput"
+                @dragover.prevent
+                @drop.prevent="handleFileDrop"
+              >
+                <p class="text-foreground/60 mb-2">
+                  사진을 드래그하거나 클릭하여 선택하세요
+                </p>
+                <p class="text-xs text-foreground/40">PNG, JPG 형식 (여러 장 가능)</p>
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  class="hidden"
+                  @change="handleFileSelect"
+                />
+              </div>
+
+              <!-- 미리보기 그리드 -->
+              <div v-if="previewUrls.length > 0" class="grid grid-cols-3 gap-2 mt-4">
+                <div
+                  v-for="(url, index) in previewUrls"
+                  :key="index"
+                  class="relative group"
+                >
+                  <img
+                    :src="url"
+                    alt="Preview"
+                    class="w-full h-24 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    @click="removeImage(index)"
+                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-2">제목 *</label>
               <input
                 v-model="travelForm.title"
                 type="text"
                 required
-                placeholder="Enter travel title"
+                placeholder="여행 제목을 입력하세요"
                 class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
               />
             </div>
@@ -216,7 +294,7 @@
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium mb-2"
-                  >Start Date *</label
+                  >시작일 *</label
                 >
                 <input
                   v-model="travelForm.startDate"
@@ -226,7 +304,7 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium mb-2">End Date *</label>
+                <label class="block text-sm font-medium mb-2">종료일 *</label>
                 <input
                   v-model="travelForm.endDate"
                   type="date"
@@ -237,7 +315,7 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium mb-2">Total Cost</label>
+              <label class="block text-sm font-medium mb-2">총 비용</label>
               <input
                 v-model.number="travelForm.totalCost"
                 type="number"
@@ -247,11 +325,11 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium mb-2">Theme</label>
+              <label class="block text-sm font-medium mb-2">테마</label>
               <input
                 v-model="travelForm.theme"
                 type="text"
-                placeholder="e.g., Food tour, Sightseeing, Adventure"
+                placeholder="예: 먹방, 관광, 휴양"
                 class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
               />
             </div>
@@ -264,7 +342,7 @@
                 class="w-4 h-4"
               />
               <label for="isPublic" class="text-sm font-medium"
-                >Make this travel public</label
+                >여행 기록 공개</label
               >
             </div>
 
@@ -274,31 +352,40 @@
                 @click="showTravelForm = false"
                 class="px-4 py-2 bg-background border border-border rounded-lg hover:bg-foreground/5 transition-colors"
               >
-                Cancel
+                취소
               </button>
               <button
                 type="submit"
                 :disabled="isSubmitting"
                 class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
-                {{ isSubmitting ? "Creating..." : "Create" }}
+                {{ isSubmitting ? "작성 중..." : "작성하기" }}
               </button>
             </div>
           </form>
         </div>
       </div>
     </div>
+
+    <!-- 여행 상세 모달 -->
+    <TravelDetailModal
+      :is-open="showTravelDetailModal"
+      :travel-id="selectedTravelId"
+      :on-close="closeTravelDetail"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { MapPin } from "lucide-vue-next";
 import axios from "axios";
 import Navigation from "@/components/Navigation.vue";
 import Footer from "@/components/Footer.vue";
+import TravelDetailModal from "@/components/TravelDetailModal.vue";
 import { useAppStore } from "@/stores/app";
-import { travelAPI } from "@/api/api";
+import { travelAPI, fileAPI } from "@/api/api";
+import { getFullImageUrl } from "@/utils/imageUtils";
 
 // ==================== State Variables ====================
 const store = useAppStore();
@@ -313,6 +400,10 @@ const infoWindow = ref(null); // 마커 hover 시 표시되는 정보창
 
 // 관광지 데이터
 const touristSpots = ref([]); // 조회된 관광지 목록
+
+// 여행 기록 데이터
+const myTravelLogs = ref([]); // 내 여행 기록
+const allTravelLogs = ref([]); // 전체 공개 여행 기록
 
 // 이미지 갤러리 모달 상태
 const selectedSpot = ref(null); // 선택된 관광지 정보
@@ -332,16 +423,33 @@ const travelForm = ref({
   theme: "",
   isPublic: true,
 });
+const selectedFiles = ref([]); // 선택된 파일들
+const previewUrls = ref([]); // 미리보기 URL들
+const fileInput = ref(null);
+
+// 상세 모달 상태
+const selectedTravelId = ref(null);
+const showTravelDetailModal = ref(false);
 
 // ==================== Computed & Utility Functions ====================
-const travelLogs = computed(() => store.travelLogs);
+// 현재 지도 모드에 따라 표시할 여행 로그
+const travelLogs = computed(() => {
+  if (isMyMap.value) {
+    return myTravelLogs.value;
+  } else {
+    return allTravelLogs.value;
+  }
+});
 
-// 최근 3개의 여행 로그만 가져오기
+// 최근 3개의 여행 로그만 가져오기 (로그인 시 항상 내 기록 표시)
 const recentTravelLogs = computed(() => {
-  if (!travelLogs.value || travelLogs.value.length === 0) return [];
+  // 로그인한 경우 내 여행 기록 표시
+  const logsToShow = store.isLoggedIn ? myTravelLogs.value : allTravelLogs.value;
+
+  if (!logsToShow || logsToShow.length === 0) return [];
 
   // 날짜를 기준으로 정렬 (최신순)
-  const sorted = [...travelLogs.value].sort((a, b) => {
+  const sorted = [...logsToShow].sort((a, b) => {
     const dateA = new Date(a.startDate || a.date || a.visitDate || 0);
     const dateB = new Date(b.startDate || b.date || b.visitDate || 0);
     return dateB - dateA;
@@ -355,7 +463,7 @@ const recentTravelLogs = computed(() => {
 const fetchMyTravelLogs = async () => {
   try {
     const data = await travelAPI.getMyTravels();
-    store.setTravelLogs(data);
+    myTravelLogs.value = data;
   } catch (error) {
     console.error("내 여행 기록 조회 실패:", error);
   }
@@ -365,7 +473,7 @@ const fetchMyTravelLogs = async () => {
 const fetchAllTravelLogs = async () => {
   try {
     const data = await travelAPI.getTravels();
-    store.setTravelLogs(data);
+    allTravelLogs.value = data;
   } catch (error) {
     console.error("전체 여행 기록 조회 실패:", error);
   }
@@ -670,12 +778,93 @@ const openFullImage = () => {
 };
 
 // ==================== Travel Record Functions ====================
+// 파일 선택 트리거
+const triggerFileInput = () => {
+  fileInput.value?.click();
+};
+
+// 파일 선택 처리
+const handleFileSelect = (event) => {
+  const files = Array.from(event.target.files || []);
+  addFiles(files);
+};
+
+// 드래그 앤 드롭 처리
+const handleFileDrop = (event) => {
+  const files = Array.from(event.dataTransfer?.files || []);
+  const imageFiles = files.filter(file => file.type.startsWith('image/'));
+  addFiles(imageFiles);
+};
+
+// 파일 추가 공통 로직
+const addFiles = (files) => {
+  files.forEach(file => {
+    if (file.type.startsWith('image/')) {
+      selectedFiles.value.push(file);
+      previewUrls.value.push(URL.createObjectURL(file));
+    }
+  });
+};
+
+// 이미지 제거
+const removeImage = (index) => {
+  URL.revokeObjectURL(previewUrls.value[index]);
+  selectedFiles.value.splice(index, 1);
+  previewUrls.value.splice(index, 1);
+};
+
+// 여행 상세 모달 열기
+const openTravelDetail = (log) => {
+  selectedTravelId.value = log.id;
+  showTravelDetailModal.value = true;
+};
+
+// 여행 상세 모달 닫기
+const closeTravelDetail = () => {
+  selectedTravelId.value = null;
+  showTravelDetailModal.value = false;
+};
+
 // 여행 기록 작성
 const handleCreateTravel = async () => {
   isSubmitting.value = true;
 
   try {
-    const newTravel = await travelAPI.createTravel(travelForm.value);
+    let imageUrls = [];
+
+    // 선택된 이미지가 있으면 업로드
+    if (selectedFiles.value.length > 0) {
+      try {
+        console.log('이미지 업로드 시작...', selectedFiles.value.length, '개');
+        const uploadResult = await fileAPI.uploadMultipleImages(selectedFiles.value);
+        console.log('이미지 업로드 결과:', uploadResult);
+
+        // 응답 형식에 따라 URL 배열 추출
+        imageUrls = uploadResult.urls || uploadResult.data?.urls || uploadResult || [];
+
+        // 문자열 배열이 아닌 경우 처리
+        if (Array.isArray(imageUrls) && imageUrls.length > 0 && typeof imageUrls[0] === 'object') {
+          imageUrls = imageUrls.map(img => img.url || img.imageUrl || img);
+        }
+
+        console.log('처리된 이미지 URLs:', imageUrls);
+      } catch (uploadError) {
+        console.warn('이미지 업로드 실패 (백엔드 미구현 가능성):', uploadError);
+        // 이미지 업로드 실패 시에도 계속 진행할지 확인
+        if (!confirm('이미지 업로드에 실패했습니다. 이미지 없이 여행 기록을 작성하시겠습니까?')) {
+          isSubmitting.value = false;
+          return;
+        }
+      }
+    }
+
+    const travelData = {
+      ...travelForm.value,
+      imageUrls: imageUrls
+    };
+
+    console.log('여행 기록 작성 데이터:', travelData);
+    const newTravel = await travelAPI.createTravel(travelData);
 
     // 성공 후 폼 초기화
     travelForm.value = {
@@ -686,6 +875,13 @@ const handleCreateTravel = async () => {
       theme: "",
       isPublic: true,
     };
+
+    // 이미지 관련 상태 초기화
+    selectedFiles.value.forEach((_, index) => {
+      URL.revokeObjectURL(previewUrls.value[index]);
+    });
+    selectedFiles.value = [];
+    previewUrls.value = [];
 
     // 모달 닫기
     showTravelForm.value = false;
@@ -722,6 +918,12 @@ const toggleMapMode = async () => {
   } else {
     // Travel Map: 전체 공개 여행 기록 불러오기
     await fetchAllTravelLogs();
+
+    // 로그인이 되어있다면 내 여행 기록도 불러오기 (Recent Travel Logs 표시용)
+    if (store.isLoggedIn) {
+      await fetchMyTravelLogs();
+    }
+
     updateMapMarkers(touristSpots.value);
   }
 };
@@ -772,17 +974,16 @@ const updateMyMapMarkers = () => {
     // 마커 클릭 시 이미지 갤러리 모달 열기
     window.kakao.maps.event.addListener(marker, "click", () => {
       selectedSpot.value = {
-        title: log.locationName,
+        title: log.title || log.locationName,
         address: log.description,
       };
 
-      // travel log의 photos를 이미지 형식에 맞게 변환
-      selectedSpotImages.value = log.photos
-        ? log.photos.map((photo) => ({
-            originimgurl: photo,
-            smallimageurl: photo,
-          }))
-        : [];
+      // travel log의 photos 또는 imageUrls를 이미지 형식에 맞게 변환
+      const images = log.imageUrls || log.photos || [];
+      selectedSpotImages.value = images.map((photo) => ({
+        originimgurl: getFullImageUrl(photo),
+        smallimageurl: getFullImageUrl(photo),
+      }));
 
       currentImageIndex.value = 0;
       showImageModal.value = true;
@@ -818,6 +1019,9 @@ const updateMyMapMarkers = () => {
 
 // My Map 정보창 HTML 생성
 const createMyMapInfoWindowContent = (log) => {
+  const firstImage = (log.imageUrls && log.imageUrls[0]) || (log.photos && log.photos[0]) || log.image;
+  const fullImageUrl = firstImage ? getFullImageUrl(firstImage) : null;
+
   return `
     <div style="
       padding: 12px;
@@ -837,12 +1041,12 @@ const createMyMapInfoWindowContent = (log) => {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-      ">${log.locationName}</h3>
+      ">${log.title || log.locationName || "Travel Location"}</h3>
       ${
-        log.image
+        fullImageUrl
           ? `
         <img
-          src="${log.image}"
+          src="${fullImageUrl}"
           style="
             width: 100%;
             height: auto;
@@ -866,7 +1070,7 @@ const createMyMapInfoWindowContent = (log) => {
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
-      ">${log.description || "설명 없음"}</p>
+      ">${log.description || log.theme || "설명 없음"}</p>
     </div>
   `;
 };
@@ -876,14 +1080,28 @@ const createMyMapInfoWindowContent = (log) => {
 onMounted(async () => {
   try {
     // 여행 로그 불러오기
+    // Travel Map 모드에서도 로그인 시 내 여행 기록 불러오기 (Recent Travel Logs 표시용)
     if (store.isLoggedIn) {
       await fetchMyTravelLogs();
+    }
+
+    // Travel Map 모드일 때는 전체 공개 여행 기록도 불러오기
+    if (!isMyMap.value) {
+      await fetchAllTravelLogs();
     }
 
     await loadKakaoMapScript();
     initializeMap();
   } catch (error) {
     console.error("카카오맵 로드 실패:", error);
+  }
+});
+
+// 로그인 상태 변화 감지 - 로그인 시 내 여행 기록 불러오기
+watch(() => store.isLoggedIn, async (newValue, oldValue) => {
+  // 로그인 상태로 변경되었을 때만 실행
+  if (newValue && !oldValue) {
+    await fetchMyTravelLogs();
   }
 });
 </script>

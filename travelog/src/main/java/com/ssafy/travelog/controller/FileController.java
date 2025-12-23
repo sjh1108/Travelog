@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
@@ -31,6 +35,24 @@ public class FileController {
             return new ResponseEntity<>(imageUrl, HttpStatus.OK);
         } catch (Exception e) {
             log.error("파일 업로드 실패", e);
+            return new ResponseEntity<>("업로드 실패", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Operation(summary = "여러 이미지 업로드 (URL 배열 반환)")
+    @PostMapping("/upload-multiple")
+    public ResponseEntity<?> uploadMultiple(@RequestParam("files") List<MultipartFile> files) {
+        try {
+            List<String> imageUrls = fileService.uploadMultipleFiles(files);
+            log.info("여러 이미지 업로드 성공: {}개", imageUrls.size());
+
+            // { urls: [...] } 형식으로 반환
+            Map<String, Object> response = new HashMap<>();
+            response.put("urls", imageUrls);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("여러 파일 업로드 실패", e);
             return new ResponseEntity<>("업로드 실패", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
