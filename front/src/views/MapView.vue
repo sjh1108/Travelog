@@ -54,17 +54,17 @@
               <!-- 대표 이미지 썸네일 -->
               <div class="relative w-full h-48 bg-muted">
                 <img
-                  :src="getFullImageUrl(log.imageUrls?.[0] || log.photos?.[0] || log.images?.[0])"
+                  :src="getFullImageUrl(getLogImages(log)[0])"
                   :alt="log.title || 'Travel photo'"
                   class="w-full h-full object-cover"
                   @error="$event.target.src = '/placeholder.svg'"
                 />
                 <!-- 사진 개수 표시 -->
                 <div
-                  v-if="(log.imageUrls?.length || log.photos?.length || log.images?.length || 0) > 1"
+                  v-if="getLogImages(log).length > 1"
                   class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded"
                 >
-                  +{{ (log.imageUrls?.length || log.photos?.length || log.images?.length || 0) - 1 }} more
+                  +{{ getLogImages(log).length - 1 }} more
                 </div>
               </div>
 
@@ -432,6 +432,32 @@ const selectedTravelId = ref(null);
 const showTravelDetailModal = ref(false);
 
 // ==================== Computed & Utility Functions ====================
+// 이미지 추출 헬퍼 함수
+const getLogImages = (log) => {
+  if (!log) return [];
+  
+  // 1. 이미 배열인 경우 (imageUrls, images, photos)
+  const images = log.imageUrls || log.images || log.photos;
+  if (Array.isArray(images) && images.length > 0) return images;
+
+  // 2. photos 필드가 JSON 문자열인 경우 파싱 시도
+  if (typeof log.photos === 'string' && log.photos.trim().startsWith('[')) {
+    try {
+      const parsed = JSON.parse(log.photos);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {
+      console.warn('photos 파싱 실패:', e);
+    }
+  }
+
+  // 3. 단일 문자열인 경우 배열로 감쌈
+  if (typeof log.photos === 'string' && log.photos.trim() !== '') {
+    return [log.photos];
+  }
+
+  return Array.isArray(images) ? images : [];
+};
+
 // 현재 지도 모드에 따라 표시할 여행 로그
 const travelLogs = computed(() => {
   if (isMyMap.value) {
@@ -978,8 +1004,8 @@ const updateMyMapMarkers = () => {
         address: log.description,
       };
 
-      // travel log의 photos 또는 imageUrls를 이미지 형식에 맞게 변환
-      const images = log.imageUrls || log.photos || [];
+      // travel log의 이미지를 안전하게 추출하여 변환
+      const images = getLogImages(log);
       selectedSpotImages.value = images.map((photo) => ({
         originimgurl: getFullImageUrl(photo),
         smallimageurl: getFullImageUrl(photo),

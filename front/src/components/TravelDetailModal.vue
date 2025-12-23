@@ -13,10 +13,14 @@
         <div class="sticky top-0 bg-background border-b border-border p-6 z-10">
           <div class="flex justify-between items-start">
             <div class="flex-1">
-              <h2 class="text-2xl font-bold mb-2">{{ travel?.title || '여행 상세' }}</h2>
+              <h2 class="text-2xl font-bold mb-2">
+                {{ travel?.title || "여행 상세" }}
+              </h2>
               <p v-if="travel" class="text-sm text-foreground/60">
                 {{ formatDate(travel.startDate) }}
-                <span v-if="travel.endDate && travel.endDate !== travel.startDate">
+                <span
+                  v-if="travel.endDate && travel.endDate !== travel.startDate"
+                >
                   ~ {{ formatDate(travel.endDate) }}
                 </span>
               </p>
@@ -31,7 +35,10 @@
         </div>
 
         <!-- 이미지 갤러리 -->
-        <div v-if="travel && travelImages.length > 0" class="p-6 border-b border-border">
+        <div
+          v-if="travel && travelImages.length > 0"
+          class="p-6 border-b border-border"
+        >
           <h3 class="text-lg font-semibold mb-4">사진</h3>
 
           <!-- 메인 이미지 -->
@@ -59,7 +66,9 @@
             </button>
 
             <!-- 이미지 카운터 -->
-            <div class="absolute bottom-2 right-2 bg-black/70 text-white text-sm px-3 py-1 rounded">
+            <div
+              class="absolute bottom-2 right-2 bg-black/70 text-white text-sm px-3 py-1 rounded"
+            >
               {{ currentImageIndex + 1 }} / {{ travelImages.length }}
             </div>
           </div>
@@ -94,7 +103,9 @@
               <p class="text-sm text-foreground/60 mb-1">기간</p>
               <p class="font-medium">
                 {{ formatDate(travel.startDate) }}
-                <span v-if="travel.endDate && travel.endDate !== travel.startDate">
+                <span
+                  v-if="travel.endDate && travel.endDate !== travel.startDate"
+                >
                   ~ {{ formatDate(travel.endDate) }}
                 </span>
               </p>
@@ -105,11 +116,15 @@
             </div>
             <div v-if="travel.totalCost">
               <p class="text-sm text-foreground/60 mb-1">총 비용</p>
-              <p class="font-medium">₩{{ travel.totalCost.toLocaleString() }}</p>
+              <p class="font-medium">
+                ₩{{ travel.totalCost.toLocaleString() }}
+              </p>
             </div>
             <div>
               <p class="text-sm text-foreground/60 mb-1">공개 여부</p>
-              <p class="font-medium">{{ travel.isPublic ? '공개' : '비공개' }}</p>
+              <p class="font-medium">
+                {{ travel.isPublic ? "공개" : "비공개" }}
+              </p>
             </div>
           </div>
         </div>
@@ -119,7 +134,9 @@
           <h3 class="text-lg font-semibold mb-4">상세 일정</h3>
 
           <div v-if="isLoadingDetails" class="text-center py-8">
-            <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary"></div>
+            <div
+              class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary"
+            ></div>
             <p class="text-sm text-foreground/50 mt-2">일정 불러오는 중...</p>
           </div>
 
@@ -134,10 +151,16 @@
               class="bg-muted/50 rounded-lg p-4"
             >
               <h4 class="font-semibold mb-2">{{ detail.locationName }}</h4>
-              <p v-if="detail.description" class="text-sm text-foreground/80 mb-2">
+              <p
+                v-if="detail.description"
+                class="text-sm text-foreground/80 mb-2"
+              >
                 {{ detail.description }}
               </p>
-              <div v-if="detail.latitude && detail.longitude" class="text-xs text-foreground/60">
+              <div
+                v-if="detail.latitude && detail.longitude"
+                class="text-xs text-foreground/60"
+              >
                 📍 {{ detail.latitude }}, {{ detail.longitude }}
               </div>
 
@@ -249,7 +272,10 @@
               </div>
 
               <!-- 미리보기 -->
-              <div v-if="detailPreviewUrls.length > 0" class="grid grid-cols-4 gap-2 mt-3">
+              <div
+                v-if="detailPreviewUrls.length > 0"
+                class="grid grid-cols-4 gap-2 mt-3"
+              >
                 <div
                   v-for="(url, index) in detailPreviewUrls"
                   :key="index"
@@ -284,7 +310,7 @@
                 :disabled="isSubmittingDetail"
                 class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
-                {{ isSubmittingDetail ? '추가 중...' : '일정 추가' }}
+                {{ isSubmittingDetail ? "추가 중..." : "일정 추가" }}
               </button>
             </div>
           </form>
@@ -336,274 +362,322 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { travelAPI, fileAPI } from '@/api/api'
-import { useAppStore } from '@/stores/app'
-import { getFullImageUrl } from '@/utils/imageUtils'
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { travelAPI, fileAPI } from "@/api/api";
+import { useAppStore } from "@/stores/app";
+import { getFullImageUrl } from "@/utils/imageUtils";
 
 const props = defineProps({
   isOpen: Boolean,
   travelId: [Number, String],
-  onClose: Function
-})
+  onClose: Function,
+});
 
-const store = useAppStore()
+const store = useAppStore();
 
 // 상태 변수
-const travel = ref(null)
-const travelDetails = ref([])
-const isLoadingDetails = ref(false)
-const currentImageIndex = ref(0)
+const travel = ref(null);
+const travelDetails = ref([]);
+const isLoadingDetails = ref(false);
+const currentImageIndex = ref(0);
 
 // 일정 추가 폼
-const showAddDetailForm = ref(false)
-const isSubmittingDetail = ref(false)
+const showAddDetailForm = ref(false);
+const isSubmittingDetail = ref(false);
 const detailForm = ref({
-  locationName: '',
+  locationName: "",
   latitude: null,
   longitude: null,
-  description: '',
-})
-const detailFiles = ref([])
-const detailPreviewUrls = ref([])
-const detailFileInput = ref(null)
+  description: "",
+});
+const detailFiles = ref([]);
+const detailPreviewUrls = ref([]);
+const detailFileInput = ref(null);
 
 // Lightbox 상태
-const showLightbox = ref(false)
-const lightboxImages = ref([])
-const lightboxIndex = ref(0)
+const showLightbox = ref(false);
+const lightboxImages = ref([]);
+const lightboxIndex = ref(0);
 
 // Computed
 const travelImages = computed(() => {
-  if (!travel.value) return []
-  return travel.value.imageUrls || travel.value.photos || []
-})
+  if (!travel.value) return [];
+  return travel.value.imageUrls || travel.value.photos || [];
+});
 
 // Helper: 상세 일정 이미지 추출
 const getDetailImages = (detail) => {
-  if (!detail) return []
-  return detail.imageUrls || detail.images || detail.photos || []
-}
+  if (!detail) return [];
+
+  // 1. 모든 가능한 데이터 필드 후보군 (우선순위: imageUrls -> photos -> images)
+  const candidates = [detail.imageUrls, detail.photos, detail.images];
+
+  for (const item of candidates) {
+    if (!item) continue;
+
+    // 2. 이미 배열인 경우 (imageUrls 등)
+    if (Array.isArray(item) && item.length > 0) {
+      return item.filter((img) => img && typeof img === "string");
+    }
+
+    // 3. 문자열인 경우 (JSON 파싱 포함)
+    if (typeof item === "string") {
+      const trimmed = item.trim();
+      if (trimmed === "") continue;
+
+      // JSON 배열 형태인 경우 ("[...]")
+      if (trimmed.startsWith("[")) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) {
+            return parsed.filter((img) => img && typeof img === "string");
+          }
+        } catch (e) {
+          console.warn("이미지 JSON 파싱 실패:", e);
+        }
+      }
+
+      // 일반 단일 문자열인 경우 배열로 감쌈
+      return [trimmed];
+    }
+  }
+
+  return [];
+};
+
 
 // Lightbox 메서드
 const openLightbox = (images, index) => {
-  lightboxImages.value = images
-  lightboxIndex.value = index
-  showLightbox.value = true
-}
+  lightboxImages.value = images;
+  lightboxIndex.value = index;
+  showLightbox.value = true;
+};
 
 const closeLightbox = () => {
-  showLightbox.value = false
-  lightboxImages.value = []
-  lightboxIndex.value = 0
-}
+  showLightbox.value = false;
+  lightboxImages.value = [];
+  lightboxIndex.value = 0;
+};
 
 const nextLightboxImage = () => {
   if (lightboxIndex.value < lightboxImages.value.length - 1) {
-    lightboxIndex.value++
+    lightboxIndex.value++;
   }
-}
+};
 
 const prevLightboxImage = () => {
   if (lightboxIndex.value > 0) {
-    lightboxIndex.value--
+    lightboxIndex.value--;
   }
-}
+};
 
 // 키보드 이벤트 (Lightbox)
 const handleLightboxKeydown = (e) => {
-  if (!showLightbox.value) return
+  if (!showLightbox.value) return;
 
-  if (e.key === 'Escape') closeLightbox()
-  if (e.key === 'ArrowRight') nextLightboxImage()
-  if (e.key === 'ArrowLeft') prevLightboxImage()
-}
+  if (e.key === "Escape") closeLightbox();
+  if (e.key === "ArrowRight") nextLightboxImage();
+  if (e.key === "ArrowLeft") prevLightboxImage();
+};
 
 // 여행 정보 및 상세 일정 불러오기
-watch(() => props.travelId, async (newId) => {
-  if (newId) {
-    currentImageIndex.value = 0
+watch(
+  () => props.travelId,
+  async (newId) => {
+    if (newId) {
+      currentImageIndex.value = 0;
 
-    // 여행 정보 불러오기 (store에서)
-    travel.value = store.travelLogs.find(log => log.id === newId)
+      // 여행 정보 불러오기 (store에서)
+      travel.value = store.travelLogs.find((log) => log.id === newId);
 
-    // 상세 일정 불러오기
-    await fetchTravelDetails()
-  }
-}, { immediate: true })
+      // 상세 일정 불러오기
+      await fetchTravelDetails();
+    }
+  },
+  { immediate: true }
+);
 
 const fetchTravelDetails = async () => {
-  if (!props.travelId) return
+  if (!props.travelId) return;
 
   try {
-    isLoadingDetails.value = true
-    const data = await travelAPI.getTravelDetails(props.travelId)
-    console.log('상세 일정 로드 완료:', data)
-    travelDetails.value = data
+    isLoadingDetails.value = true;
+    const data = await travelAPI.getTravelDetails(props.travelId);
+    console.log("상세 일정 로드 완료:", data);
+    travelDetails.value = data;
   } catch (error) {
-    console.error('일정 조회 실패:', error)
-    travelDetails.value = []
+    console.error("일정 조회 실패:", error);
+    travelDetails.value = [];
   } finally {
-    isLoadingDetails.value = false
+    isLoadingDetails.value = false;
   }
-}
+};
 
 // 이미지 갤러리 네비게이션
 const nextImage = () => {
   if (currentImageIndex.value < travelImages.value.length - 1) {
-    currentImageIndex.value++
+    currentImageIndex.value++;
   }
-}
+};
 
 const prevImage = () => {
   if (currentImageIndex.value > 0) {
-    currentImageIndex.value--
+    currentImageIndex.value--;
   }
-}
+};
 
 // 일정 사진 업로드 처리
 const triggerDetailFileInput = () => {
-  detailFileInput.value?.click()
-}
+  detailFileInput.value?.click();
+};
 
 const handleDetailFileSelect = (event) => {
-  const files = Array.from(event.target.files || [])
-  addDetailFiles(files)
-}
+  const files = Array.from(event.target.files || []);
+  addDetailFiles(files);
+};
 
 const handleDetailFileDrop = (event) => {
-  const files = Array.from(event.dataTransfer?.files || [])
-  const imageFiles = files.filter(file => file.type.startsWith('image/'))
-  addDetailFiles(imageFiles)
-}
+  const files = Array.from(event.dataTransfer?.files || []);
+  const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+  addDetailFiles(imageFiles);
+};
 
 const addDetailFiles = (files) => {
-  files.forEach(file => {
-    if (file.type.startsWith('image/')) {
-      detailFiles.value.push(file)
-      detailPreviewUrls.value.push(URL.createObjectURL(file))
+  files.forEach((file) => {
+    if (file.type.startsWith("image/")) {
+      detailFiles.value.push(file);
+      detailPreviewUrls.value.push(URL.createObjectURL(file));
     }
-  })
-}
+  });
+};
 
 const removeDetailImage = (index) => {
-  URL.revokeObjectURL(detailPreviewUrls.value[index])
-  detailFiles.value.splice(index, 1)
-  detailPreviewUrls.value.splice(index, 1)
-}
+  URL.revokeObjectURL(detailPreviewUrls.value[index]);
+  detailFiles.value.splice(index, 1);
+  detailPreviewUrls.value.splice(index, 1);
+};
 
 // 일정 추가
 const handleAddDetail = async () => {
-  isSubmittingDetail.value = true
+  isSubmittingDetail.value = true;
 
   try {
-    let imageUrls = []
+    let imageUrls = [];
 
     // 이미지 업로드
     if (detailFiles.value.length > 0) {
       try {
-        const uploadResult = await fileAPI.uploadMultipleImages(detailFiles.value)
-        imageUrls = uploadResult.urls || uploadResult.data?.urls || uploadResult || []
+        const uploadResult = await fileAPI.uploadMultipleImages(
+          detailFiles.value
+        );
+        imageUrls =
+          uploadResult.urls || uploadResult.data?.urls || uploadResult || [];
 
-        if (Array.isArray(imageUrls) && imageUrls.length > 0 && typeof imageUrls[0] === 'object') {
-          imageUrls = imageUrls.map(img => img.url || img.imageUrl || img)
+        if (
+          Array.isArray(imageUrls) &&
+          imageUrls.length > 0 &&
+          typeof imageUrls[0] === "object"
+        ) {
+          imageUrls = imageUrls.map((img) => img.url || img.imageUrl || img);
         }
       } catch (uploadError) {
-        console.warn('이미지 업로드 실패:', uploadError)
+        console.warn("이미지 업로드 실패:", uploadError);
       }
     }
 
     // sequenceOrder: 현재 일정 개수 + 1
-    const sequenceOrder = travelDetails.value.length + 1
+    const sequenceOrder = travelDetails.value.length + 1;
 
     // latitude, longitude가 빈 값이거나 NaN이면 null로 설정
-    const latitude = detailForm.value.latitude && !isNaN(detailForm.value.latitude)
-      ? detailForm.value.latitude
-      : null
-    const longitude = detailForm.value.longitude && !isNaN(detailForm.value.longitude)
-      ? detailForm.value.longitude
-      : null
+    const latitude =
+      detailForm.value.latitude && !isNaN(detailForm.value.latitude)
+        ? detailForm.value.latitude
+        : null;
+    const longitude =
+      detailForm.value.longitude && !isNaN(detailForm.value.longitude)
+        ? detailForm.value.longitude
+        : null;
 
     const detailData = {
       locationName: detailForm.value.locationName,
-      description: detailForm.value.description || '',
+      description: detailForm.value.description || "",
       latitude,
       longitude,
       sequenceOrder,
-      imageUrls
-    }
+      imageUrls,
+    };
 
-    console.log('일정 추가 요청 데이터:', detailData)
+    console.log("일정 추가 요청 데이터:", detailData);
 
     // 백엔드가 List<TravelDetailDto>를 기대하므로 배열로 감싸서 전송
-    await travelAPI.createTravelDetails(props.travelId, [detailData])
+    await travelAPI.createTravelDetails(props.travelId, [detailData]);
 
     // 폼 초기화
-    cancelAddDetail()
+    cancelAddDetail();
 
     // 일정 목록 다시 불러오기
-    await fetchTravelDetails()
+    await fetchTravelDetails();
 
-    alert('일정이 추가되었습니다!')
+    alert("일정이 추가되었습니다!");
   } catch (error) {
-    console.error('일정 추가 실패:', error)
-    console.error('에러 상세:', error.response?.data)
-    console.error('에러 상태:', error.response?.status)
+    console.error("일정 추가 실패:", error);
+    console.error("에러 상세:", error.response?.data);
+    console.error("에러 상태:", error.response?.status);
 
-    const errorMsg = error.response?.data || '알 수 없는 오류가 발생했습니다.'
-    alert(`일정 추가 실패: ${errorMsg}`)
+    const errorMsg = error.response?.data || "알 수 없는 오류가 발생했습니다.";
+    alert(`일정 추가 실패: ${errorMsg}`);
   } finally {
-    isSubmittingDetail.value = false
+    isSubmittingDetail.value = false;
   }
-}
+};
 
 const cancelAddDetail = () => {
   detailForm.value = {
-    locationName: '',
+    locationName: "",
     latitude: null,
     longitude: null,
-    description: '',
-  }
+    description: "",
+  };
   detailFiles.value.forEach((_, index) => {
-    URL.revokeObjectURL(detailPreviewUrls.value[index])
-  })
-  detailFiles.value = []
-  detailPreviewUrls.value = []
-  showAddDetailForm.value = false
-}
+    URL.revokeObjectURL(detailPreviewUrls.value[index]);
+  });
+  detailFiles.value = [];
+  detailPreviewUrls.value = [];
+  showAddDetailForm.value = false;
+};
 
 // 날짜 포맷팅
 const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  if (isNaN(date.getTime())) return ''
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
 
 // ESC 키로 모달 닫기
 const handleKeydown = (e) => {
-  if (e.key === 'Escape') {
+  if (e.key === "Escape") {
     if (showLightbox.value) {
-      closeLightbox()
+      closeLightbox();
     } else if (props.isOpen) {
-      props.onClose()
+      props.onClose();
     }
   }
-}
+};
 
 onMounted(() => {
-  document.addEventListener('keydown', handleKeydown)
-  document.addEventListener('keydown', handleLightboxKeydown)
-})
+  document.addEventListener("keydown", handleKeydown);
+  document.addEventListener("keydown", handleLightboxKeydown);
+});
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeydown)
-  document.removeEventListener('keydown', handleLightboxKeydown)
-})
+  document.removeEventListener("keydown", handleKeydown);
+  document.removeEventListener("keydown", handleLightboxKeydown);
+});
 </script>
 
 <style scoped>
