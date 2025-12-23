@@ -244,6 +244,7 @@ const toggleNotifications = async () => {
 // 알림 클릭 처리
 const handleNotificationClick = async (notification) => {
   console.log('알림 클릭:', notification)
+  console.log('type:', notification.type)
   console.log('postId:', notification.postId)
 
   // 읽지 않은 알림이면 읽음 처리 (실패해도 계속 진행)
@@ -257,18 +258,25 @@ const handleNotificationClick = async (notification) => {
     }
   }
 
-  // 게시물로 이동 (읽음 처리 실패해도 이동)
-  if (notification.postId) {
-    console.log('게시물로 이동:', `/post/${notification.postId}`)
-    showNotifications.value = false
-    try {
+  // 알림 드롭다운 닫기
+  showNotifications.value = false
+
+  // 알림 타입에 따라 다른 페이지로 이동
+  try {
+    if (notification.type === 'follow') {
+      // 팔로우 알림: 팔로우한 사용자의 프로필로 이동
+      // actorEmail을 사용자 ID로 사용 (백엔드에서 이메일로 사용자를 식별)
+      console.log('프로필로 이동:', `/profile/${notification.actorEmail}`)
+      await router.push(`/profile/${notification.actorEmail}`)
+    } else if (notification.postId) {
+      // 좋아요/댓글 알림: 게시물로 이동
+      console.log('게시물로 이동:', `/post/${notification.postId}`)
       await router.push(`/post/${notification.postId}`)
-      console.log('라우터 이동 완료')
-    } catch (error) {
-      console.error('라우터 이동 실패:', error)
+    } else {
+      console.warn('이동할 경로를 찾을 수 없습니다:', notification)
     }
-  } else {
-    console.warn('postId가 없습니다:', notification)
+  } catch (error) {
+    console.error('라우터 이동 실패:', error)
   }
 }
 

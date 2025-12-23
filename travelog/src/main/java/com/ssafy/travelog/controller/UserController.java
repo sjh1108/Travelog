@@ -128,4 +128,97 @@ public class UserController {
             return new ResponseEntity<>("회원탈퇴에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @Operation(summary = "내 정보 조회 (팔로워/팔로잉 수 포함)")
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyInfo(@RequestHeader("Authorization") String token) {
+        try {
+            String jwtToken = token.replace("Bearer ", "");
+            String email = jwtUtil.getEmail(jwtToken);
+
+            log.debug("내 정보 조회: {}", email);
+            UserDto user = userService.getMyInfo(email);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", user.getId());
+            result.put("email", user.getEmail());
+            result.put("nickname", user.getNickname());
+            result.put("profileImage", user.getProfileImage());
+            result.put("bio", user.getBio());
+            result.put("followerCount", user.getFollowerCount());
+            result.put("followingCount", user.getFollowingCount());
+
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("내 정보 조회 실패: {}", e.getMessage());
+            return new ResponseEntity<>("내 정보 조회에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Operation(summary = "특정 사용자 정보 조회 (팔로워/팔로잉 수 포함)")
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getUserInfo(@PathVariable String userId) {
+        try {
+            log.debug("사용자 정보 조회: {}", userId);
+            UserDto user = userService.getUserByIdOrEmail(userId);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", user.getId());
+            result.put("email", user.getEmail());
+            result.put("nickname", user.getNickname());
+            result.put("profileImage", user.getProfileImage());
+            result.put("bio", user.getBio());
+            result.put("followerCount", user.getFollowerCount());
+            result.put("followingCount", user.getFollowingCount());
+
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("사용자 정보 조회 실패: {}", e.getMessage());
+            return new ResponseEntity<>("사용자 정보 조회에 실패했습니다.", HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Operation(summary = "팔로우/언팔로우 토글")
+    @PostMapping("/{userId}/follow")
+    public ResponseEntity<?> toggleFollow(
+            @RequestHeader("Authorization") String token,
+            @PathVariable String userId) {
+        try {
+            String jwtToken = token.replace("Bearer ", "");
+            String email = jwtUtil.getEmail(jwtToken);
+
+            log.debug("팔로우 토글: {} -> {}", email, userId);
+            Map<String, Object> result = userService.toggleFollow(email, userId);
+
+            log.info("팔로우 토글 성공: {} -> {}", email, userId);
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            log.error("팔로우 토글 실패: {}", e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error("팔로우 토글 실패: {}", e.getMessage());
+            return new ResponseEntity<>("팔로우 처리에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Operation(summary = "팔로우 상태 확인")
+    @GetMapping("/{userId}/follow-status")
+    public ResponseEntity<?> checkFollowStatus(
+            @RequestHeader("Authorization") String token,
+            @PathVariable String userId) {
+        try {
+            String jwtToken = token.replace("Bearer ", "");
+            String email = jwtUtil.getEmail(jwtToken);
+
+            boolean isFollowing = userService.isFollowing(email, userId);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("isFollowing", isFollowing);
+
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("팔로우 상태 확인 실패: {}", e.getMessage());
+            return new ResponseEntity<>("팔로우 상태 확인에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

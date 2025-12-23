@@ -1,17 +1,24 @@
 package com.ssafy.travelog.model.service;
 
+import com.ssafy.travelog.model.dto.NotificationDto;
 import com.ssafy.travelog.model.dto.UserDto;
+import com.ssafy.travelog.model.mapper.FollowMapper;
 import com.ssafy.travelog.model.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
+    private final FollowMapper followMapper;
+    private final NotificationService notificationService;
     private final PasswordEncoder passwordEncoder; // SecurityConfig에서 주입받음
 
     @Override
@@ -91,7 +98,140 @@ public class UserServiceImpl implements UserService {
         // 3. 사용자의 좋아요 삭제 (트리거가 자동으로 like_count 감소)
         userMapper.deleteUserLikes(email);
 
-        // 4. 사용자 삭제
+        // 4. 사용자 삭제 (CASCADE로 팔로우 관계도 자동 삭제)
         userMapper.deleteUser(email);
+    }
+
+    @Override
+    public UserDto getUserById(int userId) throws Exception {
+        UserDto user = userMapper.selectUserById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("존재하지 않는 회원입니다.");
+        }
+
+        // 팔로워/팔로잉 수 설정
+        user.setFollowerCount(followMapper.getFollowerCount(userId));
+        user.setFollowingCount(followMapper.getFollowingCount(userId));
+
+        return user;
+    }
+
+    @Override
+    public UserDto getUserByIdOrEmail(String userIdOrEmail) throws Exception {
+        UserDto user = null;
+
+        // 숫자인지 확인 (ID)
+        try {
+            int userId = Integer.parseInt(userIdOrEmail);
+            user = userMapper.selectUserById(userId);
+        } catch (NumberFormatException e) {
+            // 숫자가 아니면 이메일로 간주
+            user = userMapper.selectUserByEmail(userIdOrEmail);
+        }
+
+        if (user == null) {
+            throw new IllegalArgumentException("존재하지 않는 회원입니다.");
+        }
+
+        // 팔로워/팔로잉 수 설정
+        user.setFollowerCount(followMapper.getFollowerCount(user.getId()));
+        user.setFollowingCount(followMapper.getFollowingCount(user.getId()));
+
+        return user;
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> toggleFollow(String followerEmail, String followingIdOrEmail) throws Exception {
+        // 1. 팔로우하는 사용자 조회
+        UserDto follower = userMapper.selectUserByEmail(followerEmail);
+        if (follower == null) {
+            throw new IllegalArgumentException("로그인이 필요합니다.");
+        }
+
+        // 2. 팔로우받는 사용자 조회 (ID 또는 이메일)
+        UserDto following = null;
+        try {
+            int followingId = Integer.parseInt(followingIdOrEmail);
+            following = userMapper.selectUserById(followingId);
+        } catch (NumberFormatException e) {
+            following = userMapper.selectUserByEmail(followingIdOrEmail);
+        }
+
+        if (following == null) {
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+        }
+
+        // 3. 자기 자신을 팔로우하는지 확인
+        if (follower.getId() == following.getId()) {
+            throw new IllegalArgumentException("자기 자신을 팔로우할 수 없습니다.");
+        }
+
+        // 4. 현재 팔로우 상태 확인
+        boolean isCurrentlyFollowing = followMapper.isFollowing(follower.getId(), following.getId()) > 0;
+
+        // 5. 팔로우/언팔로우 처리
+        if (isCurrentlyFollowing) {
+            // 언팔로우
+            followMapper.deleteFollow(follower.getId(), following.getId());
+        } else {
+            // 팔로우
+            followMapper.insertFollow(follower.getId(), following.getId());
+
+            // 팔로우 알림 생성
+            NotificationDto notification = new NotificationDto();
+            notification.setUserEmail(following.getEmail());  // 알림을 받는 사람
+            notification.setActorEmail(follower.getEmail());  // 알림을 발생시킨 사람
+            notification.setType("follow");
+            notification.setIsRead(false);
+
+            notificationService.createNotification(notification);
+        }
+
+        // 6. 업데이트된 팔로워/팔로잉 수 조회
+        int followerCount = followMapper.getFollowerCount(following.getId());
+        int followingCount = followMapper.getFollowingCount(follower.getId());
+
+        // 7. 결과 반환
+        Map<String, Object> result = new HashMap<>();
+        result.put("isFollowing", !isCurrentlyFollowing);
+        result.put("followerCount", followerCount);
+        result.put("followingCount", followingCount);
+
+        return result;
+    }
+
+    @Override
+    public boolean isFollowing(String followerEmail, String followingIdOrEmail) throws Exception {
+        UserDto follower = userMapper.selectUserByEmail(followerEmail);
+        if (follower == null) {
+            return false;
+        }
+
+        // 팔로우받는 사용자 조회 (ID 또는 이메일)
+        UserDto following = null;
+        try {
+            int followingId = Integer.parseInt(followingIdOrEmail);
+            following = userMapper.selectUserById(followingId);
+        } catch (NumberFormatException e) {
+            following = userMapper.selectUserByEmail(followingIdOrEmail);
+        }
+
+        if (following == null) {
+            return false;
+        }
+
+        return followMapper.isFollowing(follower.getId(), following.getId()) > 0;
+    }
+
+    @Override
+    public UserDto getMyInfo(String email) throws Exception {
+        UserDto user = getUserByEmail(email);
+
+        // 팔로워/팔로잉 수 설정
+        user.setFollowerCount(followMapper.getFollowerCount(user.getId()));
+        user.setFollowingCount(followMapper.getFollowingCount(user.getId()));
+
+        return user;
     }
 }

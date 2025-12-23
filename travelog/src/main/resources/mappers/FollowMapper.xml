@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.travelog.model.mapper.FollowMapper">
+
+    <!-- 팔로우 추가 -->
+    <insert id="insertFollow">
+        INSERT INTO Follows (follower_id, following_id)
+        VALUES (#{followerId}, #{followingId})
+    </insert>
+
+    <!-- 팔로우 삭제 (언팔로우) -->
+    <delete id="deleteFollow">
+        DELETE FROM Follows
+        WHERE follower_id = #{followerId} AND following_id = #{followingId}
+    </delete>
+
+    <!-- 팔로우 여부 확인 -->
+    <select id="isFollowing" resultType="int">
+        SELECT COUNT(*)
+        FROM Follows
+        WHERE follower_id = #{followerId} AND following_id = #{followingId}
+    </select>
+
+    <!-- 특정 사용자의 팔로워 수 (이 사람을 팔로우하는 사람들의 수) -->
+    <select id="getFollowerCount" resultType="int">
+        SELECT COUNT(*)
+        FROM Follows
+        WHERE following_id = #{userId}
+    </select>
+
+    <!-- 특정 사용자의 팔로잉 수 (이 사람이 팔로우하는 사람들의 수) -->
+    <select id="getFollowingCount" resultType="int">
+        SELECT COUNT(*)
+        FROM Follows
+        WHERE follower_id = #{userId}
+    </select>
+
+</mapper>

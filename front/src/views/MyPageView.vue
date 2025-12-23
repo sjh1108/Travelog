@@ -417,6 +417,25 @@ const handleDeleteAccount = async () => {
   }
 }
 
+// 사용자 정보 갱신
+const fetchUserInfo = async () => {
+  try {
+    console.log('MyPage - 사용자 정보 조회 시작...')
+    const userData = await userAPI.getMyInfo()
+    console.log('MyPage - 받은 사용자 데이터:', userData)
+
+    // 스토어 업데이트
+    const updatedUser = {
+      ...store.currentUser,
+      ...userData
+    }
+    store.setCurrentUser(updatedUser)
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+  } catch (error) {
+    console.error('MyPage - 사용자 정보 조회 실패:', error)
+  }
+}
+
 // 게시물 불러오기
 const fetchPosts = async () => {
   try {
@@ -459,7 +478,8 @@ const fetchPosts = async () => {
 }
 
 onMounted(async () => {
-  // 페이지 로드 시 게시물 불러오기
+  // 페이지 로드 시 사용자 정보와 게시물 불러오기
+  await fetchUserInfo()
   await fetchPosts()
 })
 

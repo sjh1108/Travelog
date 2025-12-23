@@ -49,4 +49,10 @@
         DELETE FROM Users WHERE email = #{email}
     </delete>
 
+    <select id="selectUserById" parameterType="int" resultType="UserDto">
+        SELECT id, email, password, nickname, profile_image, bio, created_at, updated_at
+        FROM Users
+        WHERE id = #{userId}
+    </select>
+
 </mapper>

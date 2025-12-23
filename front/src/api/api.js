@@ -20,6 +20,18 @@ export const userAPI = {
   updateProfile: async (userData) => {
     const response = await axios.put(`${API_BASE_URL}/users/me`, userData)
     return response.data
+  },
+
+  // 내 정보 조회 (팔로워/팔로잉 수 포함)
+  getMyInfo: async () => {
+    const response = await axios.get(`${API_BASE_URL}/users/me`)
+    return response.data
+  },
+
+  // 특정 사용자 정보 조회
+  getUserInfo: async (userId) => {
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}`)
+    return response.data
   }
 }
 
@@ -173,6 +185,33 @@ export const notificationAPI = {
   // 알림 삭제
   deleteNotification: async (notificationId) => {
     const response = await axios.delete(`${API_BASE_URL}/notifications/${notificationId}`)
+    return response.data
+  }
+}
+
+// 팔로우 API
+export const followAPI = {
+  // 팔로우/언팔로우 토글
+  toggleFollow: async (userId) => {
+    const response = await axios.post(`${API_BASE_URL}/users/${userId}/follow`)
+    return response.data
+  },
+
+  // 특정 사용자의 팔로워 목록 조회
+  getFollowers: async (userId) => {
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}/followers`)
+    return response.data
+  },
+
+  // 특정 사용자의 팔로잉 목록 조회
+  getFollowing: async (userId) => {
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}/following`)
+    return response.data
+  },
+
+  // 팔로우 상태 확인
+  checkFollowStatus: async (userId) => {
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}/follow-status`)
     return response.data
   }
 }
