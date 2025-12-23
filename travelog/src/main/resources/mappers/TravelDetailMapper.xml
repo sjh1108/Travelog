@@ -4,6 +4,22 @@
 
 <mapper namespace="com.ssafy.travelog.model.mapper.TravelDetailMapper">
 
+    <resultMap id="TravelDetailResultMap" type="travelDetailDto">
+        <id property="id" column="id"/>
+        <result property="travelRecordId" column="travelRecordId"/>
+        <result property="touristSpotId" column="touristSpotId"/>
+        <result property="sequenceOrder" column="sequenceOrder"/>
+        <result property="locationName" column="locationName"/>
+        <result property="description" column="description"/>
+        <result property="review" column="review"/>
+        <result property="cost" column="cost"/>
+        <result property="visitDate" column="visitDate"/>
+        <result property="imageUrls" column="imageUrls" typeHandler="com.ssafy.travelog.config.JsonListTypeHandler"/>
+        <result property="photos" column="photos"/>
+        <result property="latitude" column="latitude"/>
+        <result property="longitude" column="longitude"/>
+    </resultMap>
+
     <insert id="insertDetail" parameterType="travelDetailDto">
         INSERT INTO Travel_Details
         (travel_record_id, tourist_spot_id, sequence_order, location_name, description, review, cost, visit_date, image_urls, photos, latitude, longitude)
@@ -23,7 +39,7 @@
                )
     </insert>
 
-    <select id="selectDetailsByRecordId" resultType="travelDetailDto">
+    <select id="selectDetailsByRecordId" resultMap="TravelDetailResultMap">
         SELECT
             id,
             travel_record_id AS travelRecordId,
@@ -42,5 +58,10 @@
         WHERE travel_record_id = #{recordId}
         ORDER BY sequence_order ASC
     </select>
+
+    <delete id="deleteDetail" parameterType="int">
+        DELETE FROM Travel_Details
+        WHERE id = #{id}
+    </delete>
 
 </mapper>

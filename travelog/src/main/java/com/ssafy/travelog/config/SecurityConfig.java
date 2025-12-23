@@ -39,6 +39,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 로그인, 회원가입 허용
                         .requestMatchers("/api/users/join", "/api/users/login").permitAll()
+                        // 회원정보 수정, 회원탈퇴는 인증 필요
+                        .requestMatchers("/api/users/me").authenticated()
                         .requestMatchers("/images/**").permitAll()
                         .requestMatchers("/api/files/upload").permitAll()
 

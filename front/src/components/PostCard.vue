@@ -104,8 +104,8 @@ const props = defineProps({
 const store = useAppStore()
 
 const commentCount = computed(() => {
-  const comments = store.getComments(props.post.id)
-  return comments.length || props.post.commentCount
+  // 항상 백엔드에서 받은 commentCount 사용 (캐시된 댓글 수가 아닌 실제 DB 값)
+  return props.post.commentCount || 0
 })
 
 // 프로필 링크 계산 (현재 사용자면 /mypage, 아니면 /profile/:id)

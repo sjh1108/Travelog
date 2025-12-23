@@ -32,9 +32,55 @@
           <div id="kakao-map" class="w-full h-[600px]"></div>
         </div>
 
-        <!-- Travel Logs (최근 3개) -->
+        <!-- Travel Logs -->
         <div class="mt-8">
-          <h2 class="text-2xl font-bold mb-4">Recent Travel Logs</h2>
+          <div class="mb-4">
+            <div class="flex justify-between items-center mb-3">
+              <h2 class="text-2xl font-bold">Recent Travel Logs</h2>
+              <!-- 기간별 필터 -->
+              <div class="flex gap-2">
+                <button
+                  v-for="filter in periodFilters"
+                  :key="filter.value"
+                  @click="selectedPeriodFilter = filter.value"
+                  :class="[
+                    'px-4 py-2 text-sm rounded-lg transition-colors',
+                    selectedPeriodFilter === filter.value
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted hover:bg-muted/80'
+                  ]"
+                >
+                  {{ filter.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- 기간 선택 입력 필드 -->
+            <div
+              v-if="selectedPeriodFilter === 'custom'"
+              class="flex justify-end gap-3 items-center"
+            >
+              <div class="flex items-center gap-2">
+                <label class="text-sm font-medium">시작일:</label>
+                <input
+                  v-model="customStartDate"
+                  type="date"
+                  :max="todayDate"
+                  class="px-3 py-1.5 text-sm bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
+                />
+              </div>
+              <div class="flex items-center gap-2">
+                <label class="text-sm font-medium">종료일:</label>
+                <input
+                  v-model="customEndDate"
+                  type="date"
+                  :max="todayDate"
+                  :min="customStartDate"
+                  class="px-3 py-1.5 text-sm bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
+                />
+              </div>
+            </div>
+          </div>
           <div
             v-if="recentTravelLogs.length === 0"
             class="text-center py-8 text-foreground/50"
@@ -48,7 +94,7 @@
             <div
               v-for="log in recentTravelLogs"
               :key="log.id"
-              class="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+              class="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer travel-log-card"
               @click="openTravelDetail(log)"
             >
               <!-- 대표 이미지 썸네일 -->
@@ -66,6 +112,14 @@
                 >
                   +{{ getLogImages(log).length - 1 }} more
                 </div>
+                <!-- 삭제 버튼 -->
+                <button
+                  @click.stop="handleDeleteTravelLog(log.id)"
+                  class="travel-delete-btn absolute top-2 right-2 px-3 py-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-opacity shadow-lg"
+                  title="여행 기록 삭제"
+                >
+                  삭제
+                </button>
               </div>
 
               <!-- 내용 -->
@@ -92,6 +146,19 @@
                 </button>
               </div>
             </div>
+          </div>
+
+          <!-- 더보기 버튼 -->
+          <div
+            v-if="filteredTravelLogs.length > displayedLogsCount"
+            class="text-center mt-6"
+          >
+            <button
+              @click="showMoreLogs"
+              class="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              더보기 ({{ filteredTravelLogs.length - displayedLogsCount }}개 더 있음)
+            </button>
           </div>
         </div>
       </div>
@@ -236,7 +303,7 @@
           <form @submit.prevent="handleCreateTravel" class="space-y-4">
             <!-- 이미지 업로드 영역 -->
             <div>
-              <label class="block text-sm font-medium mb-2">사진</label>
+              <label class="block text-sm font-medium mb-2">썸네일 사진 (1장)</label>
               <div
                 class="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
                 @click="triggerFileInput"
@@ -244,35 +311,30 @@
                 @drop.prevent="handleFileDrop"
               >
                 <p class="text-foreground/60 mb-2">
-                  사진을 드래그하거나 클릭하여 선택하세요
+                  썸네일 사진을 드래그하거나 클릭하여 선택하세요
                 </p>
-                <p class="text-xs text-foreground/40">PNG, JPG 형식 (여러 장 가능)</p>
+                <p class="text-xs text-foreground/40">PNG, JPG 형식 (1장만 가능)</p>
                 <input
                   ref="fileInput"
                   type="file"
                   accept="image/*"
-                  multiple
                   class="hidden"
                   @change="handleFileSelect"
                 />
               </div>
 
-              <!-- 미리보기 그리드 -->
-              <div v-if="previewUrls.length > 0" class="grid grid-cols-3 gap-2 mt-4">
-                <div
-                  v-for="(url, index) in previewUrls"
-                  :key="index"
-                  class="relative group"
-                >
+              <!-- 미리보기 -->
+              <div v-if="previewUrls.length > 0" class="mt-4">
+                <div class="relative group inline-block">
                   <img
-                    :src="url"
+                    :src="previewUrls[0]"
                     alt="Preview"
-                    class="w-full h-24 object-cover rounded-lg"
+                    class="w-full max-w-md h-48 object-cover rounded-lg"
                   />
                   <button
                     type="button"
-                    @click="removeImage(index)"
-                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    @click="removeImage(0)"
+                    class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     ×
                   </button>
@@ -291,6 +353,29 @@
               />
             </div>
 
+            <!-- 주소 검색 -->
+            <div>
+              <label class="block text-sm font-medium mb-2">여행 장소 *</label>
+              <div class="flex gap-2">
+                <input
+                  v-model="travelForm.address"
+                  type="text"
+                  required
+                  readonly
+                  placeholder="주소 검색 버튼을 클릭하세요"
+                  class="flex-1 px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20 cursor-pointer"
+                  @click="openAddressSearch"
+                />
+                <button
+                  type="button"
+                  @click="openAddressSearch"
+                  class="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors whitespace-nowrap"
+                >
+                  주소 검색
+                </button>
+              </div>
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium mb-2"
@@ -299,6 +384,7 @@
                 <input
                   v-model="travelForm.startDate"
                   type="date"
+                  :max="todayDate"
                   required
                   class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
                 />
@@ -308,42 +394,12 @@
                 <input
                   v-model="travelForm.endDate"
                   type="date"
+                  :max="todayDate"
+                  :min="travelForm.startDate"
                   required
                   class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
                 />
               </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium mb-2">총 비용</label>
-              <input
-                v-model.number="travelForm.totalCost"
-                type="number"
-                placeholder="0"
-                class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium mb-2">테마</label>
-              <input
-                v-model="travelForm.theme"
-                type="text"
-                placeholder="예: 먹방, 관광, 휴양"
-                class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
-              />
-            </div>
-
-            <div class="flex items-center gap-2">
-              <input
-                v-model="travelForm.isPublic"
-                type="checkbox"
-                id="isPublic"
-                class="w-4 h-4"
-              />
-              <label for="isPublic" class="text-sm font-medium"
-                >여행 기록 공개</label
-              >
             </div>
 
             <div class="flex gap-2 justify-end">
@@ -417,11 +473,14 @@ const showTravelForm = ref(false);
 const isSubmitting = ref(false);
 const travelForm = ref({
   title: "",
+  address: "",
+  latitude: null,
+  longitude: null,
   startDate: "",
   endDate: "",
-  totalCost: 0,
-  theme: "",
-  isPublic: true,
+  totalCost: 0, // 기본값 유지 (백엔드 호환성)
+  theme: "", // 기본값 유지 (백엔드 호환성)
+  isPublic: true, // 항상 공개로 설정
 });
 const selectedFiles = ref([]); // 선택된 파일들
 const previewUrls = ref([]); // 미리보기 URL들
@@ -431,31 +490,78 @@ const fileInput = ref(null);
 const selectedTravelId = ref(null);
 const showTravelDetailModal = ref(false);
 
+// 여행 기록 표시 관련 상태
+const displayedLogsCount = ref(6); // 처음 표시할 개수
+const selectedPeriodFilter = ref('all'); // 선택된 기간 필터
+const customStartDate = ref(''); // 커스텀 시작일
+const customEndDate = ref(''); // 커스텀 종료일
+
+// 기간 필터 옵션
+const periodFilters = [
+  { label: '전체', value: 'all' },
+  { label: '1개월', value: '1month' },
+  { label: '3개월', value: '3months' },
+  { label: '6개월', value: '6months' },
+  { label: '올해', value: 'thisYear' },
+  { label: '기간 선택', value: 'custom' }
+];
+
 // ==================== Computed & Utility Functions ====================
 // 이미지 추출 헬퍼 함수
 const getLogImages = (log) => {
   if (!log) return [];
-  
-  // 1. 이미 배열인 경우 (imageUrls, images, photos)
-  const images = log.imageUrls || log.images || log.photos;
-  if (Array.isArray(images) && images.length > 0) return images;
 
-  // 2. photos 필드가 JSON 문자열인 경우 파싱 시도
-  if (typeof log.photos === 'string' && log.photos.trim().startsWith('[')) {
-    try {
-      const parsed = JSON.parse(log.photos);
-      if (Array.isArray(parsed)) return parsed;
-    } catch (e) {
-      console.warn('photos 파싱 실패:', e);
+  // 1. imageUrls 필드 처리 (우선순위 1)
+  if (log.imageUrls) {
+    // 배열인 경우
+    if (Array.isArray(log.imageUrls) && log.imageUrls.length > 0) {
+      return log.imageUrls;
+    }
+    // JSON 문자열인 경우 파싱
+    if (typeof log.imageUrls === 'string' && log.imageUrls.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(log.imageUrls);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.warn('imageUrls 파싱 실패:', e);
+      }
+    }
+    // 단일 문자열인 경우
+    if (typeof log.imageUrls === 'string' && log.imageUrls.trim() !== '') {
+      return [log.imageUrls];
     }
   }
 
-  // 3. 단일 문자열인 경우 배열로 감쌈
-  if (typeof log.photos === 'string' && log.photos.trim() !== '') {
-    return [log.photos];
+  // 2. images 필드 처리
+  if (log.images) {
+    if (Array.isArray(log.images) && log.images.length > 0) return log.images;
+    if (typeof log.images === 'string' && log.images.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(log.images);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.warn('images 파싱 실패:', e);
+      }
+    }
   }
 
-  return Array.isArray(images) ? images : [];
+  // 3. photos 필드 처리
+  if (log.photos) {
+    if (Array.isArray(log.photos) && log.photos.length > 0) return log.photos;
+    if (typeof log.photos === 'string' && log.photos.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(log.photos);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.warn('photos 파싱 실패:', e);
+      }
+    }
+    if (typeof log.photos === 'string' && log.photos.trim() !== '') {
+      return [log.photos];
+    }
+  }
+
+  return [];
 };
 
 // 현재 지도 모드에 따라 표시할 여행 로그
@@ -467,8 +573,8 @@ const travelLogs = computed(() => {
   }
 });
 
-// 최근 3개의 여행 로그만 가져오기 (로그인 시 항상 내 기록 표시)
-const recentTravelLogs = computed(() => {
+// 기간별로 필터링된 여행 로그
+const filteredTravelLogs = computed(() => {
   // 로그인한 경우 내 여행 기록 표시
   const logsToShow = store.isLoggedIn ? myTravelLogs.value : allTravelLogs.value;
 
@@ -481,14 +587,75 @@ const recentTravelLogs = computed(() => {
     return dateB - dateA;
   });
 
-  // 최근 3개만 반환
-  return sorted.slice(0, 3);
+  // 기간 필터 적용
+  if (selectedPeriodFilter.value === 'all') {
+    return sorted;
+  }
+
+  // 커스텀 기간 선택
+  if (selectedPeriodFilter.value === 'custom') {
+    if (!customStartDate.value || !customEndDate.value) {
+      return sorted; // 날짜가 선택되지 않으면 전체 표시
+    }
+
+    const startDate = new Date(customStartDate.value);
+    const endDate = new Date(customEndDate.value);
+    endDate.setHours(23, 59, 59, 999); // 종료일의 끝까지 포함
+
+    return sorted.filter(log => {
+      const logDate = new Date(log.startDate || log.date || log.visitDate || 0);
+      return logDate >= startDate && logDate <= endDate;
+    });
+  }
+
+  const now = new Date();
+  const filterDate = new Date();
+
+  switch (selectedPeriodFilter.value) {
+    case '1month':
+      filterDate.setMonth(now.getMonth() - 1);
+      break;
+    case '3months':
+      filterDate.setMonth(now.getMonth() - 3);
+      break;
+    case '6months':
+      filterDate.setMonth(now.getMonth() - 6);
+      break;
+    case 'thisYear':
+      filterDate.setMonth(0);
+      filterDate.setDate(1);
+      break;
+  }
+
+  return sorted.filter(log => {
+    const logDate = new Date(log.startDate || log.date || log.visitDate || 0);
+    return logDate >= filterDate;
+  });
+});
+
+// 표시할 여행 로그 (개수 제한 적용)
+const recentTravelLogs = computed(() => {
+  return filteredTravelLogs.value.slice(0, displayedLogsCount.value);
+});
+
+// 오늘 날짜 (YYYY-MM-DD 형식)
+const todayDate = computed(() => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 });
 
 // 여행 로그 불러오기 (내 여행 기록)
 const fetchMyTravelLogs = async () => {
   try {
     const data = await travelAPI.getMyTravels();
+    console.log("🔍 여행 기록 데이터:", data);
+    if (data && data.length > 0) {
+      console.log("🔍 첫 번째 여행 기록의 imageUrls:", data[0].imageUrls);
+      console.log("🔍 imageUrls 타입:", typeof data[0].imageUrls);
+    }
     myTravelLogs.value = data;
   } catch (error) {
     console.error("내 여행 기록 조회 실패:", error);
@@ -505,18 +672,18 @@ const fetchAllTravelLogs = async () => {
   }
 };
 
-// 날짜 포맷팅 (예: January 1, 2024)
+// 날짜 포맷팅 (예: 2024년 1월 1일)
 const formatDate = (dateString) => {
-  if (!dateString) return "Date not available";
+  if (!dateString) return "날짜 없음";
 
   const date = new Date(dateString);
 
   // Invalid Date 체크
   if (isNaN(date.getTime())) {
-    return "Invalid date";
+    return "잘못된 날짜";
   }
 
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -545,7 +712,7 @@ const loadKakaoMapScript = () => {
       return;
     }
 
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&autoload=false`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&autoload=false&libraries=services`;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("Failed to load Kakao Map script"));
     document.head.appendChild(script);
@@ -668,13 +835,6 @@ const updateMapMarkers = (spots) => {
   markers.value.forEach((marker) => marker.setMap(null));
   markers.value = [];
 
-  // InfoWindow 인스턴스 생성 (hover 시 정보 표시용)
-  if (!infoWindow.value) {
-    infoWindow.value = new window.kakao.maps.InfoWindow({
-      removable: false,
-    });
-  }
-
   // 각 관광지에 대해 마커 생성
   spots.forEach((spot) => {
     if (spot.mapx && spot.mapy) {
@@ -688,19 +848,54 @@ const updateMapMarkers = (spots) => {
       marker.setMap(map.value);
       markers.value.push(marker);
 
-      // 마우스 오버 시 간단한 정보창 표시
+      // CustomOverlay를 사용하여 정보창 생성
+      let customOverlay = null;
+      let mouseoutTimer = null;
+
+      // 마우스 오버 시 정보창 표시
       window.kakao.maps.event.addListener(marker, "mouseover", () => {
-        infoWindow.value.setContent(createInfoWindowContent(spot));
-        infoWindow.value.open(map.value, marker);
+        // mouseout 타이머가 있으면 취소
+        if (mouseoutTimer) {
+          clearTimeout(mouseoutTimer);
+          mouseoutTimer = null;
+        }
+
+        // 기존 오버레이가 있으면 제거
+        if (customOverlay) {
+          customOverlay.setMap(null);
+        }
+
+        // CustomOverlay 생성
+        customOverlay = new window.kakao.maps.CustomOverlay({
+          position: markerPosition,
+          content: createInfoWindowContent(spot),
+          yAnchor: 3.1, // 마커와 겹치지 않도록 충분히 위쪽에 표시
+          zIndex: 3
+        });
+
+        customOverlay.setMap(map.value);
       });
 
-      // 마우스 아웃 시 정보창 숨김
+      // 마우스 아웃 시 정보창 숨김 (약간의 지연을 주어 버벅거림 방지)
       window.kakao.maps.event.addListener(marker, "mouseout", () => {
-        infoWindow.value.close();
+        mouseoutTimer = setTimeout(() => {
+          if (customOverlay) {
+            customOverlay.setMap(null);
+          }
+        }, 100);
       });
 
       // 마커 클릭 시 이미지 갤러리 모달 열기
       window.kakao.maps.event.addListener(marker, "click", async () => {
+        // 정보창 즉시 닫기
+        if (customOverlay) {
+          customOverlay.setMap(null);
+        }
+        if (mouseoutTimer) {
+          clearTimeout(mouseoutTimer);
+          mouseoutTimer = null;
+        }
+
         selectedSpot.value = spot;
         const images = await fetchTouristSpotImages(spot.id);
         selectedSpotImages.value = images;
@@ -734,6 +929,7 @@ const createInfoWindowContent = (spot) => {
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      pointer-events: none;
     ">
       <h3 style="
         margin: 0 0 8px 0;
@@ -809,27 +1005,34 @@ const triggerFileInput = () => {
   fileInput.value?.click();
 };
 
-// 파일 선택 처리
+// 파일 선택 처리 (단일 이미지만)
 const handleFileSelect = (event) => {
   const files = Array.from(event.target.files || []);
-  addFiles(files);
+  if (files.length > 0) {
+    addFile(files[0]);
+  }
 };
 
-// 드래그 앤 드롭 처리
+// 드래그 앤 드롭 처리 (단일 이미지만)
 const handleFileDrop = (event) => {
   const files = Array.from(event.dataTransfer?.files || []);
   const imageFiles = files.filter(file => file.type.startsWith('image/'));
-  addFiles(imageFiles);
+  if (imageFiles.length > 0) {
+    addFile(imageFiles[0]);
+  }
 };
 
-// 파일 추가 공통 로직
-const addFiles = (files) => {
-  files.forEach(file => {
-    if (file.type.startsWith('image/')) {
-      selectedFiles.value.push(file);
-      previewUrls.value.push(URL.createObjectURL(file));
+// 파일 추가 로직 (기존 이미지 교체)
+const addFile = (file) => {
+  if (file.type.startsWith('image/')) {
+    // 기존 이미지가 있으면 URL 해제
+    if (previewUrls.value.length > 0) {
+      URL.revokeObjectURL(previewUrls.value[0]);
     }
-  });
+    // 새 이미지로 교체
+    selectedFiles.value = [file];
+    previewUrls.value = [URL.createObjectURL(file)];
+  }
 };
 
 // 이미지 제거
@@ -851,6 +1054,83 @@ const closeTravelDetail = () => {
   showTravelDetailModal.value = false;
 };
 
+// 여행 기록 삭제
+const handleDeleteTravelLog = async (travelId) => {
+  if (!confirm("정말로 이 여행 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.")) {
+    return;
+  }
+
+  try {
+    await travelAPI.deleteTravel(travelId);
+    alert("여행 기록이 삭제되었습니다.");
+
+    // 내 여행 기록 다시 불러오기
+    await fetchMyTravelLogs();
+
+    // My Map 모드일 때 지도 마커 업데이트
+    if (isMyMap.value) {
+      updateMyMapMarkers();
+    }
+  } catch (error) {
+    console.error("여행 기록 삭제 실패:", error);
+    alert("여행 기록 삭제에 실패했습니다.");
+  }
+};
+
+// 더보기 버튼 클릭
+const showMoreLogs = () => {
+  displayedLogsCount.value += 6; // 6개씩 더 표시
+};
+
+// 여행 로그 사진 앨범 열기
+const openPhotoAlbum = (log, event) => {
+  // 이벤트 버블링 방지 (카드 클릭 이벤트와 충돌 방지)
+  event.stopPropagation();
+
+  selectedSpot.value = {
+    title: log.title || log.locationName,
+    address: log.address || log.description,
+  };
+
+  // 여행 로그의 모든 이미지를 추출하여 변환
+  const images = getLogImages(log);
+  selectedSpotImages.value = images.map((photo) => ({
+    originimgurl: getFullImageUrl(photo),
+    smallimageurl: getFullImageUrl(photo),
+  }));
+
+  currentImageIndex.value = 0;
+  showImageModal.value = true;
+};
+
+// 주소 검색 팝업 열기
+const openAddressSearch = () => {
+  new window.daum.Postcode({
+    oncomplete: function(data) {
+      // 선택한 주소 정보 저장
+      const fullAddress = data.roadAddress || data.jibunAddress;
+      travelForm.value.address = fullAddress;
+
+      // 주소를 좌표로 변환
+      const geocoder = new window.kakao.maps.services.Geocoder();
+      geocoder.addressSearch(fullAddress, function(result, status) {
+        if (status === window.kakao.maps.services.Status.OK) {
+          travelForm.value.latitude = parseFloat(result[0].y);
+          travelForm.value.longitude = parseFloat(result[0].x);
+          console.log('주소 변환 성공:', {
+            address: fullAddress,
+            lat: travelForm.value.latitude,
+            lng: travelForm.value.longitude
+          });
+        } else {
+          console.error('주소를 좌표로 변환하는데 실패했습니다.');
+          alert('주소를 좌표로 변환하는데 실패했습니다. 다시 시도해주세요.');
+        }
+      });
+    }
+  }).open();
+};
+
 // 여행 기록 작성
 const handleCreateTravel = async () => {
   isSubmitting.value = true;
@@ -858,24 +1138,23 @@ const handleCreateTravel = async () => {
   try {
     let imageUrls = [];
 
-    // 선택된 이미지가 있으면 업로드
+    // 선택된 이미지가 있으면 업로드 (단일 이미지)
     if (selectedFiles.value.length > 0) {
       try {
-        console.log('이미지 업로드 시작...', selectedFiles.value.length, '개');
-        const uploadResult = await fileAPI.uploadMultipleImages(selectedFiles.value);
+        console.log('이미지 업로드 시작...');
+        const uploadResult = await fileAPI.uploadImage(selectedFiles.value[0]);
         console.log('이미지 업로드 결과:', uploadResult);
 
-        // 응답 형식에 따라 URL 배열 추출
-        imageUrls = uploadResult.urls || uploadResult.data?.urls || uploadResult || [];
+        // 응답에서 URL 추출
+        const imageUrl = uploadResult.url || uploadResult.data?.url || uploadResult.imageUrl || uploadResult;
 
-        // 문자열 배열이 아닌 경우 처리
-        if (Array.isArray(imageUrls) && imageUrls.length > 0 && typeof imageUrls[0] === 'object') {
-          imageUrls = imageUrls.map(img => img.url || img.imageUrl || img);
+        if (imageUrl && typeof imageUrl === 'string') {
+          imageUrls = [imageUrl];
         }
 
-        console.log('처리된 이미지 URLs:', imageUrls);
+        console.log('처리된 이미지 URL:', imageUrls);
       } catch (uploadError) {
-        console.warn('이미지 업로드 실패 (백엔드 미구현 가능성):', uploadError);
+        console.warn('이미지 업로드 실패:', uploadError);
         // 이미지 업로드 실패 시에도 계속 진행할지 확인
         if (!confirm('이미지 업로드에 실패했습니다. 이미지 없이 여행 기록을 작성하시겠습니까?')) {
           isSubmitting.value = false;
@@ -895,6 +1174,9 @@ const handleCreateTravel = async () => {
     // 성공 후 폼 초기화
     travelForm.value = {
       title: "",
+      address: "",
+      latitude: null,
+      longitude: null,
       startDate: "",
       endDate: "",
       totalCost: 0,
@@ -914,6 +1196,11 @@ const handleCreateTravel = async () => {
 
     // 여행 기록 다시 불러오기
     await fetchMyTravelLogs();
+
+    // My Map 모드일 때 지도 마커 업데이트
+    if (isMyMap.value) {
+      updateMyMapMarkers();
+    }
 
     alert("Travel record created successfully!");
   } catch (error) {
@@ -960,53 +1247,108 @@ const updateMyMapMarkers = () => {
   markers.value.forEach((marker) => marker.setMap(null));
   markers.value = [];
 
-  // InfoWindow 인스턴스 생성
-  if (!infoWindow.value) {
-    infoWindow.value = new window.kakao.maps.InfoWindow({
-      removable: false,
-    });
-  }
-
   // 위치 정보를 저장할 배열
   const positions = [];
 
-  // 각 여행 로그에 대해 마커 생성
+  // 각 여행 로그에 대해 마커 생성 (실제 좌표가 있는 경우만)
   travelLogs.value.forEach((log) => {
-    const lat = log.latitude || 36.3504 + (Math.random() - 0.5) * 0.5;
-    const lng = log.longitude || 127.3845 + (Math.random() - 0.5) * 0.5;
+    // 실제 좌표가 있는 경우만 마커 생성
+    if (!log.latitude || !log.longitude) {
+      console.log(`여행 기록 "${log.title}"에 위치 정보가 없습니다.`);
+      return;
+    }
+
+    const lat = log.latitude;
+    const lng = log.longitude;
 
     positions.push({ lat, lng });
 
     const markerPosition = new window.kakao.maps.LatLng(lat, lng);
     const marker = new window.kakao.maps.Marker({
       position: markerPosition,
-      title: log.locationName,
+      title: log.title || log.locationName,
     });
 
     marker.setMap(map.value);
     markers.value.push(marker);
 
+    // CustomOverlay를 사용하여 정보창 생성
+    let customOverlay = null;
+    let mouseoutTimer = null;
+
     // 마우스 오버 시 정보창 표시
     window.kakao.maps.event.addListener(marker, "mouseover", () => {
-      infoWindow.value.setContent(createMyMapInfoWindowContent(log));
-      infoWindow.value.open(map.value, marker);
+      // mouseout 타이머가 있으면 취소
+      if (mouseoutTimer) {
+        clearTimeout(mouseoutTimer);
+        mouseoutTimer = null;
+      }
+
+      // 기존 오버레이가 있으면 제거
+      if (customOverlay) {
+        customOverlay.setMap(null);
+      }
+
+      // CustomOverlay 생성
+      customOverlay = new window.kakao.maps.CustomOverlay({
+        position: markerPosition,
+        content: createMyMapInfoWindowContent(log),
+        yAnchor: 3.1, // 마커와 겹치지 않도록 충분히 위쪽에 표시
+        zIndex: 3
+      });
+
+      customOverlay.setMap(map.value);
     });
 
-    // 마우스 아웃 시 정보창 숨김
+    // 마우스 아웃 시 정보창 숨김 (약간의 지연을 주어 버벅거림 방지)
     window.kakao.maps.event.addListener(marker, "mouseout", () => {
-      infoWindow.value.close();
+      mouseoutTimer = setTimeout(() => {
+        if (customOverlay) {
+          customOverlay.setMap(null);
+        }
+      }, 100);
     });
 
     // 마커 클릭 시 이미지 갤러리 모달 열기
-    window.kakao.maps.event.addListener(marker, "click", () => {
+    window.kakao.maps.event.addListener(marker, "click", async () => {
+      // 정보창 즉시 닫기
+      if (customOverlay) {
+        customOverlay.setMap(null);
+      }
+      if (mouseoutTimer) {
+        clearTimeout(mouseoutTimer);
+        mouseoutTimer = null;
+      }
+
       selectedSpot.value = {
         title: log.title || log.locationName,
-        address: log.description,
+        address: log.address || log.description,
       };
 
-      // travel log의 이미지를 안전하게 추출하여 변환
-      const images = getLogImages(log);
-      selectedSpotImages.value = images.map((photo) => ({
+      // 여행 기록의 썸네일 이미지
+      const recordImages = getLogImages(log);
+
+      // 세부일정의 모든 이미지 가져오기
+      let allImages = [...recordImages];
+
+      try {
+        // 세부일정 데이터 조회
+        const details = await travelAPI.getTravelDetails(log.id);
+
+        if (details && Array.isArray(details)) {
+          // 각 세부일정의 이미지 추출
+          details.forEach(detail => {
+            const detailImages = getLogImages(detail);
+            allImages = [...allImages, ...detailImages];
+          });
+        }
+      } catch (error) {
+        console.warn('세부일정 이미지 로드 실패:', error);
+        // 에러가 나도 기본 이미지는 표시
+      }
+
+      // 모든 이미지를 갤러리 형식으로 변환
+      selectedSpotImages.value = allImages.map((photo) => ({
         originimgurl: getFullImageUrl(photo),
         smallimageurl: getFullImageUrl(photo),
       }));
@@ -1040,10 +1382,15 @@ const updateMyMapMarkers = () => {
       map.value.setCenter(center);
       map.value.setLevel(8); // 적절한 줌 레벨
     }
+  } else {
+    // 위치 정보가 있는 여행 기록이 없으면 기본 위치(대전)로 설정
+    const defaultCenter = new window.kakao.maps.LatLng(36.3504, 127.3845);
+    map.value.setCenter(defaultCenter);
+    map.value.setLevel(13);
   }
 };
 
-// My Map 정보창 HTML 생성
+// My Map 정보창 HTML 생성 (Travel Map과 동일한 스타일)
 const createMyMapInfoWindowContent = (log) => {
   const firstImage = (log.imageUrls && log.imageUrls[0]) || (log.photos && log.photos[0]) || log.image;
   const fullImageUrl = firstImage ? getFullImageUrl(firstImage) : null;
@@ -1058,6 +1405,7 @@ const createMyMapInfoWindowContent = (log) => {
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      pointer-events: none;
     ">
       <h3 style="
         margin: 0 0 8px 0;
@@ -1130,4 +1478,24 @@ watch(() => store.isLoggedIn, async (newValue, oldValue) => {
     await fetchMyTravelLogs();
   }
 });
+
+// 필터 변경 시 표시 개수 초기화
+watch(selectedPeriodFilter, () => {
+  displayedLogsCount.value = 6;
+});
+
+// 커스텀 날짜 변경 시 표시 개수 초기화
+watch([customStartDate, customEndDate], () => {
+  displayedLogsCount.value = 6;
+});
 </script>
+
+<style scoped>
+.travel-log-card .travel-delete-btn {
+  opacity: 0;
+}
+
+.travel-log-card:hover .travel-delete-btn {
+  opacity: 1;
+}
+</style>

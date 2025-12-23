@@ -14,6 +14,12 @@ export const userAPI = {
   login: async (credentials) => {
     const response = await axios.post(`${API_BASE_URL}/users/login`, credentials)
     return response.data
+  },
+
+  // 회원정보 수정
+  updateProfile: async (userData) => {
+    const response = await axios.put(`${API_BASE_URL}/users/me`, userData)
+    return response.data
   }
 }
 
@@ -82,6 +88,12 @@ export const travelAPI = {
     return response.data
   },
 
+  // 여행 기록 삭제
+  deleteTravel: async (travelId) => {
+    const response = await axios.delete(`${API_BASE_URL}/travels/${travelId}`)
+    return response.data
+  },
+
   // 상세 일정 조회
   getTravelDetails: async (travelId) => {
     const response = await axios.get(`${API_BASE_URL}/travels/${travelId}/details`)
@@ -91,6 +103,12 @@ export const travelAPI = {
   // 상세 일정 추가
   createTravelDetails: async (travelId, detailsData) => {
     const response = await axios.post(`${API_BASE_URL}/travels/${travelId}/details`, detailsData)
+    return response.data
+  },
+
+  // 상세 일정 삭제
+  deleteTravelDetail: async (travelId, detailId) => {
+    const response = await axios.delete(`${API_BASE_URL}/travels/${travelId}/details/${detailId}`)
     return response.data
   }
 }

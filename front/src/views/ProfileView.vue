@@ -15,7 +15,7 @@
               <div class="flex items-center gap-4 mb-4">
                 <h1 class="text-2xl font-bold">{{ user.nickname || 'Unknown User' }}</h1>
                 <button
-                  v-if="user.id !== store.currentUser?.id && user.email !== store.currentUser?.email"
+                  v-if="!isOwnProfile"
                   @click="handleFollow"
                   :class="[
                     'px-6 py-2 rounded-lg font-semibold transition-colors',
@@ -93,6 +93,14 @@ const route = useRoute()
 const store = useAppStore()
 
 const userId = route.params.id
+
+// 본인 프로필인지 확인
+const isOwnProfile = computed(() => {
+  if (!store.currentUser) return false
+  return userId === store.currentUser.id ||
+         userId === store.currentUser.email ||
+         userId === String(store.currentUser.id)
+})
 
 // 게시물에서 사용자 정보 추출 또는 현재 사용자 정보 사용
 const user = computed(() => {

@@ -173,7 +173,7 @@ const handleLogin = async () => {
       email: formData.value.email,
       nickname: response.data.nickname || '여행자',
       profileImage: response.data.profileImage || '/default-profile.svg',
-      bio: response.data.bio || ''
+      bio: response.data.bio || (response.data.nickname ? response.data.nickname + '입니다.' : '여행자입니다.')
     }
 
     // user 객체에 id가 없으면 email을 id로 사용
@@ -184,6 +184,11 @@ const handleLogin = async () => {
     // profileImage가 없으면 기본값 설정
     if (!user.profileImage) {
       user.profileImage = '/default-profile.svg'
+    }
+
+    // bio가 없으면 기본값 설정
+    if (!user.bio || user.bio.trim() === '') {
+      user.bio = user.nickname + '입니다.'
     }
 
     console.log('로그인 성공 - 사용자 정보:', user)

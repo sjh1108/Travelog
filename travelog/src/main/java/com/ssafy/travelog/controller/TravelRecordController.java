@@ -85,4 +85,32 @@ public class TravelRecordController {
     public ResponseEntity<?> getDetails(@PathVariable int recordId) {
         return new ResponseEntity<>(travelService.getDetails(recordId), HttpStatus.OK);
     }
+
+    @Operation(summary = "여행 기록 삭제")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable int id, Authentication authentication) {
+        try {
+            String email = (String) authentication.getPrincipal();
+            log.info("여행 기록 삭제 요청: ID={}, User={}", id, email);
+            travelService.deleteRecord(id);
+            return new ResponseEntity<>("여행 기록 삭제 성공", HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("여행 기록 삭제 실패", e);
+            return new ResponseEntity<>("삭제 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Operation(summary = "상세 일정 삭제")
+    @DeleteMapping("/{recordId}/details/{detailId}")
+    public ResponseEntity<?> deleteDetail(@PathVariable int recordId, @PathVariable int detailId, Authentication authentication) {
+        try {
+            String email = (String) authentication.getPrincipal();
+            log.info("상세 일정 삭제 요청: Record ID={}, Detail ID={}, User={}", recordId, detailId, email);
+            travelService.deleteDetail(detailId);
+            return new ResponseEntity<>("상세 일정 삭제 성공", HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("상세 일정 삭제 실패", e);
+            return new ResponseEntity<>("삭제 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

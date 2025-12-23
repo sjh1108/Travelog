@@ -97,7 +97,16 @@
 
         <!-- 여행 정보 -->
         <div v-if="travel" class="p-6 border-b border-border">
-          <h3 class="text-lg font-semibold mb-4">여행 정보</h3>
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">여행 정보</h3>
+            <button
+              @click="handleDeleteTravel"
+              class="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              title="여행 기록 삭제"
+            >
+              여행 기록 삭제
+            </button>
+          </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
               <p class="text-sm text-foreground/60 mb-1">기간</p>
@@ -148,9 +157,18 @@
             <div
               v-for="detail in travelDetails"
               :key="detail.id"
-              class="bg-muted/50 rounded-lg p-4"
+              class="bg-muted/50 rounded-lg p-4 relative detail-card"
             >
-              <h4 class="font-semibold mb-2">{{ detail.locationName }}</h4>
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-semibold">{{ detail.locationName }}</h4>
+                <button
+                  @click="handleDeleteDetail(detail.id)"
+                  class="detail-delete-btn px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-opacity"
+                  title="일정 삭제"
+                >
+                  삭제
+                </button>
+              </div>
               <p
                 v-if="detail.description"
                 class="text-sm text-foreground/80 mb-2"
@@ -402,43 +420,103 @@ const lightboxIndex = ref(0);
 // Computed
 const travelImages = computed(() => {
   if (!travel.value) return [];
-  return travel.value.imageUrls || travel.value.photos || [];
+
+  // imageUrls 우선 처리
+  if (travel.value.imageUrls) {
+    // 배열인 경우
+    if (Array.isArray(travel.value.imageUrls)) return travel.value.imageUrls;
+    // JSON 문자열인 경우
+    if (typeof travel.value.imageUrls === 'string' && travel.value.imageUrls.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(travel.value.imageUrls);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        console.warn('travel imageUrls 파싱 실패:', e);
+      }
+    }
+    // 단일 문자열인 경우
+    if (typeof travel.value.imageUrls === 'string' && travel.value.imageUrls.trim() !== '') {
+      return [travel.value.imageUrls];
+    }
+  }
+
+  // photos 처리
+  if (travel.value.photos) {
+    if (Array.isArray(travel.value.photos)) return travel.value.photos;
+    if (typeof travel.value.photos === 'string' && travel.value.photos.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(travel.value.photos);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        console.warn('travel photos 파싱 실패:', e);
+      }
+    }
+  }
+
+  return [];
 });
 
 // Helper: 상세 일정 이미지 추출
 const getDetailImages = (detail) => {
   if (!detail) return [];
 
-  // 1. 모든 가능한 데이터 필드 후보군 (우선순위: imageUrls -> photos -> images)
-  const candidates = [detail.imageUrls, detail.photos, detail.images];
-
-  for (const item of candidates) {
-    if (!item) continue;
-
-    // 2. 이미 배열인 경우 (imageUrls 등)
-    if (Array.isArray(item) && item.length > 0) {
-      return item.filter((img) => img && typeof img === "string");
+  // 1. imageUrls 필드 처리 (우선순위 1)
+  if (detail.imageUrls) {
+    // 배열인 경우
+    if (Array.isArray(detail.imageUrls) && detail.imageUrls.length > 0) {
+      return detail.imageUrls.filter((img) => img && typeof img === "string");
     }
-
-    // 3. 문자열인 경우 (JSON 파싱 포함)
-    if (typeof item === "string") {
-      const trimmed = item.trim();
-      if (trimmed === "") continue;
-
-      // JSON 배열 형태인 경우 ("[...]")
-      if (trimmed.startsWith("[")) {
-        try {
-          const parsed = JSON.parse(trimmed);
-          if (Array.isArray(parsed)) {
-            return parsed.filter((img) => img && typeof img === "string");
-          }
-        } catch (e) {
-          console.warn("이미지 JSON 파싱 실패:", e);
+    // JSON 문자열인 경우 파싱
+    if (typeof detail.imageUrls === "string" && detail.imageUrls.trim().startsWith("[")) {
+      try {
+        const parsed = JSON.parse(detail.imageUrls.trim());
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.filter((img) => img && typeof img === "string");
         }
+      } catch (e) {
+        console.warn("imageUrls 파싱 실패:", e);
       }
+    }
+    // 단일 문자열인 경우
+    if (typeof detail.imageUrls === "string" && detail.imageUrls.trim() !== "") {
+      return [detail.imageUrls.trim()];
+    }
+  }
 
-      // 일반 단일 문자열인 경우 배열로 감쌈
-      return [trimmed];
+  // 2. photos 필드 처리
+  if (detail.photos) {
+    if (Array.isArray(detail.photos) && detail.photos.length > 0) {
+      return detail.photos.filter((img) => img && typeof img === "string");
+    }
+    if (typeof detail.photos === "string" && detail.photos.trim().startsWith("[")) {
+      try {
+        const parsed = JSON.parse(detail.photos.trim());
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.filter((img) => img && typeof img === "string");
+        }
+      } catch (e) {
+        console.warn("photos 파싱 실패:", e);
+      }
+    }
+    if (typeof detail.photos === "string" && detail.photos.trim() !== "") {
+      return [detail.photos.trim()];
+    }
+  }
+
+  // 3. images 필드 처리
+  if (detail.images) {
+    if (Array.isArray(detail.images) && detail.images.length > 0) {
+      return detail.images.filter((img) => img && typeof img === "string");
+    }
+    if (typeof detail.images === "string" && detail.images.trim().startsWith("[")) {
+      try {
+        const parsed = JSON.parse(detail.images.trim());
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.filter((img) => img && typeof img === "string");
+        }
+      } catch (e) {
+        console.warn("images 파싱 실패:", e);
+      }
     }
   }
 
@@ -503,7 +581,11 @@ const fetchTravelDetails = async () => {
   try {
     isLoadingDetails.value = true;
     const data = await travelAPI.getTravelDetails(props.travelId);
-    console.log("상세 일정 로드 완료:", data);
+    console.log("🔍 상세 일정 로드 완료:", data);
+    if (data && data.length > 0) {
+      console.log("🔍 첫 번째 상세 일정의 imageUrls:", data[0].imageUrls);
+      console.log("🔍 imageUrls 타입:", typeof data[0].imageUrls);
+    }
     travelDetails.value = data;
   } catch (error) {
     console.error("일정 조회 실패:", error);
@@ -609,8 +691,8 @@ const handleAddDetail = async () => {
 
     console.log("일정 추가 요청 데이터:", detailData);
 
-    // 백엔드가 List<TravelDetailDto>를 기대하므로 배열로 감싸서 전송
-    await travelAPI.createTravelDetails(props.travelId, [detailData]);
+    // 백엔드가 단일 TravelDetailDto 객체를 기대하므로 배열로 감싸지 않음
+    await travelAPI.createTravelDetails(props.travelId, detailData);
 
     // 폼 초기화
     cancelAddDetail();
@@ -658,6 +740,50 @@ const formatDate = (dateString) => {
   });
 };
 
+// 여행 기록 삭제
+const handleDeleteTravel = async () => {
+  if (!props.travelId) return;
+
+  if (!confirm("정말로 이 여행 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.")) {
+    return;
+  }
+
+  try {
+    await travelAPI.deleteTravel(props.travelId);
+    alert("여행 기록이 삭제되었습니다.");
+
+    // 모달 닫기
+    props.onClose();
+
+    // 부모 컴포넌트에서 목록을 다시 불러오도록 이벤트 발생
+    window.location.reload();
+  } catch (error) {
+    console.error("여행 기록 삭제 실패:", error);
+    alert("여행 기록 삭제에 실패했습니다.");
+  }
+};
+
+// 상세 일정 삭제
+const handleDeleteDetail = async (detailId) => {
+  if (!props.travelId || !detailId) return;
+
+  if (!confirm("이 일정을 삭제하시겠습니까?")) {
+    return;
+  }
+
+  try {
+    await travelAPI.deleteTravelDetail(props.travelId, detailId);
+
+    // 일정 목록 다시 불러오기
+    await fetchTravelDetails();
+
+    alert("일정이 삭제되었습니다.");
+  } catch (error) {
+    console.error("일정 삭제 실패:", error);
+    alert("일정 삭제에 실패했습니다.");
+  }
+};
+
 // ESC 키로 모달 닫기
 const handleKeydown = (e) => {
   if (e.key === "Escape") {
@@ -703,5 +829,13 @@ onUnmounted(() => {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+.detail-card .detail-delete-btn {
+  opacity: 0;
+}
+
+.detail-card:hover .detail-delete-btn {
+  opacity: 1;
 }
 </style>

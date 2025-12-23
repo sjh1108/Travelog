@@ -49,4 +49,16 @@ public class TravelRecordServiceImpl implements TravelRecordService {
     public List<TravelDetailDto> getDetails(int recordId) {
         return detailMapper.selectDetailsByRecordId(recordId);
     }
+
+    // [추가] 여행 기록 삭제
+    @Override
+    public void deleteRecord(int id) {
+        recordMapper.deleteRecord(id);
+    }
+
+    // [추가] 상세 일정 삭제
+    @Override
+    public void deleteDetail(int detailId) {
+        detailMapper.deleteDetail(detailId);
+    }
 }

@@ -20,6 +20,13 @@ ADD COLUMN description TEXT NULL COMMENT '메모/설명';
 ALTER TABLE Travel_Details
 ADD COLUMN image_urls TEXT NULL COMMENT '사진 URL 목록 (JSON 배열)';
 
+
+-- 여행기록 좌표 테이블에 추가
+  ALTER TABLE Travel_Records
+  ADD COLUMN address VARCHAR(500) NULL,
+  ADD COLUMN latitude DOUBLE NULL,
+  ADD COLUMN longitude DOUBLE NULL;
+
 -- ===============================================
 -- 데이터 마이그레이션 (선택사항)
 -- ===============================================

@@ -18,5 +18,9 @@ public class TravelRecordDto {
     private boolean isPublic;     // 공개 여부 (true/false)
     private List<String> imageUrls; // 여행 사진 URL 목록
 
+    private String address;       // 주소
+    private Double latitude;      // 위도
+    private Double longitude;     // 경도
+
     private String createdAt;     // 생성일
 }

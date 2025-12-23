@@ -106,8 +106,8 @@
                   프로필 이미지 (선택)
                 </label>
 
-                <!-- 이미지 미리보기 -->
-                <div v-if="previewUrl" class="mb-3 flex justify-center">
+                <!-- 이미지 미리보기 (선택된 경우에만 표시) -->
+                <div v-if="previewUrl" class="flex justify-center">
                   <div class="relative">
                     <img
                       :src="previewUrl"
@@ -124,8 +124,9 @@
                   </div>
                 </div>
 
-                <!-- 드래그앤드롭 영역 -->
+                <!-- 드래그앤드롭 영역 (선택되지 않은 경우에만 표시) -->
                 <div
+                  v-else
                   @dragover.prevent="handleDragOver"
                   @dragleave.prevent="isDragging = false"
                   @drop.prevent="handleDrop"
