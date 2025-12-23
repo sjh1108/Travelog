@@ -135,10 +135,10 @@ const userProfileImage = computed(() => getProfileImageUrl(props.post.user?.prof
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
+  return date.toLocaleDateString('ko-KR', {
     year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   })
 }
 

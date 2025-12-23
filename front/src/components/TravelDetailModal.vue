@@ -377,6 +377,25 @@
       </div>
     </div>
   </div>
+
+  <!-- 삭제 확인 모달 -->
+  <ConfirmModal
+    :is-open="showDeleteConfirm"
+    :title="deleteConfirmTitle"
+    :message="deleteConfirmMessage"
+    confirm-text="삭제"
+    cancel-text="취소"
+    :danger="true"
+    :on-confirm="confirmDelete"
+    :on-cancel="() => showDeleteConfirm = false"
+  />
+
+  <!-- 정보 모달 -->
+  <InfoModal
+    :is-open="showInfoModal"
+    :message="infoMessage"
+    :on-close="closeInfoModal"
+  />
 </template>
 
 <script setup>
@@ -384,6 +403,8 @@ import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { travelAPI, fileAPI } from "@/api/api";
 import { useAppStore } from "@/stores/app";
 import { getFullImageUrl } from "@/utils/imageUtils";
+import ConfirmModal from "./ConfirmModal.vue";
+import InfoModal from "./InfoModal.vue";
 
 const props = defineProps({
   isOpen: Boolean,
@@ -416,6 +437,22 @@ const detailFileInput = ref(null);
 const showLightbox = ref(false);
 const lightboxImages = ref([]);
 const lightboxIndex = ref(0);
+
+// 삭제 확인 모달 상태
+const showDeleteConfirm = ref(false);
+const deleteConfirmTitle = ref('');
+const deleteConfirmMessage = ref('');
+const deleteType = ref(''); // 'travel' or 'detail'
+const itemToDelete = ref(null);
+
+// 정보 모달 상태
+const showInfoModal = ref(false);
+const infoMessage = ref('');
+
+const closeInfoModal = () => {
+  showInfoModal.value = false;
+  infoMessage.value = '';
+};
 
 // Computed
 const travelImages = computed(() => {
@@ -581,10 +618,10 @@ const fetchTravelDetails = async () => {
   try {
     isLoadingDetails.value = true;
     const data = await travelAPI.getTravelDetails(props.travelId);
-    console.log("🔍 상세 일정 로드 완료:", data);
+//     console.log("🔍 상세 일정 로드 완료:", data);
     if (data && data.length > 0) {
-      console.log("🔍 첫 번째 상세 일정의 imageUrls:", data[0].imageUrls);
-      console.log("🔍 imageUrls 타입:", typeof data[0].imageUrls);
+//       console.log("🔍 첫 번째 상세 일정의 imageUrls:", data[0].imageUrls);
+//       console.log("🔍 imageUrls 타입:", typeof data[0].imageUrls);
     }
     travelDetails.value = data;
   } catch (error) {
@@ -689,7 +726,7 @@ const handleAddDetail = async () => {
       imageUrls,
     };
 
-    console.log("일정 추가 요청 데이터:", detailData);
+//     console.log("일정 추가 요청 데이터:", detailData);
 
     // 백엔드가 단일 TravelDetailDto 객체를 기대하므로 배열로 감싸지 않음
     await travelAPI.createTravelDetails(props.travelId, detailData);
@@ -699,8 +736,6 @@ const handleAddDetail = async () => {
 
     // 일정 목록 다시 불러오기
     await fetchTravelDetails();
-
-    alert("일정이 추가되었습니다!");
   } catch (error) {
     console.error("일정 추가 실패:", error);
     console.error("에러 상세:", error.response?.data);
@@ -740,47 +775,70 @@ const formatDate = (dateString) => {
   });
 };
 
-// 여행 기록 삭제
-const handleDeleteTravel = async () => {
+// 여행 기록 삭제 (모달 열기)
+const handleDeleteTravel = () => {
   if (!props.travelId) return;
 
-  if (!confirm("정말로 이 여행 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.")) {
-    return;
-  }
-
-  try {
-    await travelAPI.deleteTravel(props.travelId);
-    alert("여행 기록이 삭제되었습니다.");
-
-    // 모달 닫기
-    props.onClose();
-
-    // 부모 컴포넌트에서 목록을 다시 불러오도록 이벤트 발생
-    window.location.reload();
-  } catch (error) {
-    console.error("여행 기록 삭제 실패:", error);
-    alert("여행 기록 삭제에 실패했습니다.");
-  }
+  deleteType.value = 'travel';
+  deleteConfirmTitle.value = '여행 기록 삭제';
+  deleteConfirmMessage.value = '정말로 이 여행 기록을 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다.';
+  itemToDelete.value = props.travelId;
+  showDeleteConfirm.value = true;
 };
 
-// 상세 일정 삭제
-const handleDeleteDetail = async (detailId) => {
+// 상세 일정 삭제 (모달 열기)
+const handleDeleteDetail = (detailId) => {
   if (!props.travelId || !detailId) return;
 
-  if (!confirm("이 일정을 삭제하시겠습니까?")) {
-    return;
-  }
+  deleteType.value = 'detail';
+  deleteConfirmTitle.value = '일정 삭제';
+  deleteConfirmMessage.value = '이 일정을 삭제하시겠습니까?';
+  itemToDelete.value = detailId;
+  showDeleteConfirm.value = true;
+};
+
+// 삭제 확인
+const confirmDelete = async () => {
+  if (!itemToDelete.value) return;
 
   try {
-    await travelAPI.deleteTravelDetail(props.travelId, detailId);
+    if (deleteType.value === 'travel') {
+      await travelAPI.deleteTravel(itemToDelete.value);
+      showDeleteConfirm.value = false;
 
-    // 일정 목록 다시 불러오기
-    await fetchTravelDetails();
+      // 모달 닫기
+      props.onClose();
 
-    alert("일정이 삭제되었습니다.");
+      // 정보 모달 표시
+      infoMessage.value = '여행 기록이 삭제되었습니다.';
+      showInfoModal.value = true;
+
+      // 페이지 새로고침
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } else if (deleteType.value === 'detail') {
+      await travelAPI.deleteTravelDetail(props.travelId, itemToDelete.value);
+      showDeleteConfirm.value = false;
+
+      // 일정 목록 다시 불러오기
+      await fetchTravelDetails();
+
+      // 정보 모달 표시
+      infoMessage.value = '일정이 삭제되었습니다.';
+      showInfoModal.value = true;
+    }
   } catch (error) {
-    console.error("일정 삭제 실패:", error);
-    alert("일정 삭제에 실패했습니다.");
+    console.error("삭제 실패:", error);
+    showDeleteConfirm.value = false;
+
+    const errorMsg = deleteType.value === 'travel'
+      ? '여행 기록 삭제에 실패했습니다.'
+      : '일정 삭제에 실패했습니다.';
+    alert(errorMsg);
+  } finally {
+    itemToDelete.value = null;
+    deleteType.value = '';
   }
 };
 

@@ -64,14 +64,14 @@ let observer = null
 const fetchPosts = async () => {
   try {
     isLoading.value = true
-    console.log('게시물 조회 시작...')
+//     console.log('게시물 조회 시작...')
     const data = await postAPI.getPosts()
-    console.log('받은 게시물 데이터:', data)
+//     console.log('받은 게시물 데이터:', data)
 
     // 백엔드 응답을 프론트엔드 형식으로 변환
     const postsWithUser = data.map(post => {
-      console.log('게시물 원본 데이터:', post)
-      console.log('isLiked:', post.isLiked, 'likeCount:', post.likeCount)
+//       console.log('게시물 원본 데이터:', post)
+//       console.log('isLiked:', post.isLiked, 'likeCount:', post.likeCount)
 
       // 이미 user 객체가 있으면 그대로 사용
       if (post.user) {
@@ -97,7 +97,7 @@ const fetchPosts = async () => {
       return post
     })
 
-    console.log('처리된 게시물:', postsWithUser)
+//     console.log('처리된 게시물:', postsWithUser)
     store.setPosts(postsWithUser)
   } catch (error) {
     console.error('게시물 조회 실패:', error)
@@ -105,12 +105,12 @@ const fetchPosts = async () => {
 
     // 403 에러 (인증 필요) 또는 401 에러 (로그인 필요) 시 빈 배열 설정
     if (error.response?.status === 403 || error.response?.status === 401) {
-      console.log('로그인이 필요합니다. 빈 피드를 표시합니다.')
+//       console.log('로그인이 필요합니다. 빈 피드를 표시합니다.')
       store.setPosts([])
 
       // 로그인하지 않은 상태임을 사용자에게 알림
       if (!store.currentUser) {
-        console.log('로그인하면 게시물을 볼 수 있습니다.')
+//         console.log('로그인하면 게시물을 볼 수 있습니다.')
       }
     } else {
       // 다른 에러의 경우 빈 배열 설정
@@ -149,7 +149,7 @@ onUnmounted(() => {
 const handleLoadMore = async () => {
   // 무한 스크롤 기능은 백엔드에서 페이지네이션을 지원할 때 구현
   // 현재는 전체 게시물만 불러옴
-  console.log('무한 스크롤 - 추가 게시물 로드는 백엔드 페이지네이션 지원 필요')
+//   console.log('무한 스크롤 - 추가 게시물 로드는 백엔드 페이지네이션 지원 필요')
 }
 
 const handleCommentClick = (postId) => {

@@ -5,7 +5,7 @@
       <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-8">
           <h1 class="text-3xl font-bold">
-            {{ isMyMap ? "My Map" : "Travel Map" }}
+            {{ isMyMap ? "내 지도" : "여행 지도" }}
           </h1>
           <div class="flex gap-2">
             <button
@@ -13,20 +13,81 @@
               @click="showTravelForm = true"
               class="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors"
             >
-              + Create Travel
+              + 여행 기록 추가
             </button>
             <button
               @click="toggleMapMode"
               class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
-              {{ isMyMap ? "Travel Map" : "My Map" }}
+              {{ isMyMap ? "여행 지도" : "내 지도" }}
             </button>
           </div>
         </div>
-        <!-- 이 자리에 관광지 정보를 지역별 원하는 콘텐츠 조회할 수 있는 메뉴 -->
-        <!--<div v-if="!isMyMap" class="ml-[45%] mb-4">
-          <p>관광지 필터 메뉴자리</p>
-        </div>-->
+        <!-- 관광지 필터 메뉴 (Travel Map 모드일 때만 표시) -->
+        <div v-if="!isMyMap" class="mb-4 bg-card border border-border rounded-lg p-4">
+          <div class="flex flex-wrap items-end gap-3">
+            <div class="flex-1 min-w-[150px]">
+              <label class="block text-sm font-medium mb-2">시도 선택</label>
+              <select
+                v-model="selectedAreaCode"
+                @change="handleAreaCodeChange"
+                class="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
+              >
+                <option value="">시도 선택</option>
+                <option v-for="area in areaCodes" :key="area.code" :value="area.code">
+                  {{ area.name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="flex-1 min-w-[150px]">
+              <label class="block text-sm font-medium mb-2">시군구 선택</label>
+              <select
+                v-model="selectedSigunguCode"
+                :disabled="!selectedAreaCode"
+                class="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">시군구 선택</option>
+                <option v-for="sigungu in sigunguCodes" :key="sigungu.code" :value="sigungu.code">
+                  {{ sigungu.name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="flex-1 min-w-[150px]">
+              <label class="block text-sm font-medium mb-2">관광타입</label>
+              <select
+                v-model="selectedContentType"
+                class="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
+              >
+                <option value="">전체</option>
+                <option value="12">관광지</option>
+                <option value="14">문화시설</option>
+                <option value="15">축제공연행사</option>
+                <option value="25">여행코스</option>
+                <option value="28">레포츠</option>
+                <option value="32">숙박</option>
+                <option value="38">쇼핑</option>
+                <option value="39">음식점</option>
+              </select>
+            </div>
+
+            <button
+              @click="handleSearchTouristSpots"
+              class="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold whitespace-nowrap"
+            >
+              관광지 조회
+            </button>
+
+            <button
+              @click="handleResetFilters"
+              class="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors whitespace-nowrap"
+            >
+              초기화
+            </button>
+          </div>
+        </div>
+
         <!-- 카카오맵 컨테이너 -->
         <div class="bg-card border border-border rounded-lg overflow-hidden">
           <div id="kakao-map" class="w-full h-[600px]"></div>
@@ -36,7 +97,7 @@
         <div class="mt-8">
           <div class="mb-4">
             <div class="flex justify-between items-center mb-3">
-              <h2 class="text-2xl font-bold">Recent Travel Logs</h2>
+              <h2 class="text-2xl font-bold">최근 여행 기록</h2>
               <!-- 기간별 필터 -->
               <div class="flex gap-2">
                 <button
@@ -85,7 +146,7 @@
             v-if="recentTravelLogs.length === 0"
             class="text-center py-8 text-foreground/50"
           >
-            No travel logs yet
+            아직 여행 기록이 없습니다
           </div>
           <div
             v-else
@@ -429,16 +490,37 @@
       :travel-id="selectedTravelId"
       :on-close="closeTravelDetail"
     />
+
+    <!-- 삭제 확인 모달 -->
+    <ConfirmModal
+      :is-open="showDeleteConfirm"
+      title="여행 기록 삭제"
+      message="정말로 이 여행 기록을 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다."
+      confirm-text="삭제"
+      cancel-text="취소"
+      :danger="true"
+      :on-confirm="confirmDeleteTravel"
+      :on-cancel="() => showDeleteConfirm = false"
+    />
+
+    <!-- 정보 모달 -->
+    <InfoModal
+      :is-open="showInfoModal"
+      :message="infoMessage"
+      :on-close="closeInfoModal"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { MapPin } from "lucide-vue-next";
 import axios from "axios";
 import Navigation from "@/components/Navigation.vue";
 import Footer from "@/components/Footer.vue";
 import TravelDetailModal from "@/components/TravelDetailModal.vue";
+import ConfirmModal from "@/components/ConfirmModal.vue";
+import InfoModal from "@/components/InfoModal.vue";
 import { useAppStore } from "@/stores/app";
 import { travelAPI, fileAPI } from "@/api/api";
 import { getFullImageUrl } from "@/utils/imageUtils";
@@ -456,6 +538,13 @@ const infoWindow = ref(null); // 마커 hover 시 표시되는 정보창
 
 // 관광지 데이터
 const touristSpots = ref([]); // 조회된 관광지 목록
+
+// 필터 관련 상태
+const areaCodes = ref([]); // 시도 목록
+const sigunguCodes = ref([]); // 시군구 목록
+const selectedAreaCode = ref(''); // 선택된 시도 코드
+const selectedSigunguCode = ref(''); // 선택된 시군구 코드
+const selectedContentType = ref(''); // 선택된 관광타입
 
 // 여행 기록 데이터
 const myTravelLogs = ref([]); // 내 여행 기록
@@ -489,6 +578,19 @@ const fileInput = ref(null);
 // 상세 모달 상태
 const selectedTravelId = ref(null);
 const showTravelDetailModal = ref(false);
+
+// 삭제 확인 모달 상태
+const showDeleteConfirm = ref(false);
+const travelToDelete = ref(null);
+
+// 정보 모달 상태
+const showInfoModal = ref(false);
+const infoMessage = ref('');
+
+const closeInfoModal = () => {
+  showInfoModal.value = false;
+  infoMessage.value = '';
+};
 
 // 여행 기록 표시 관련 상태
 const displayedLogsCount = ref(6); // 처음 표시할 개수
@@ -651,11 +753,11 @@ const todayDate = computed(() => {
 const fetchMyTravelLogs = async () => {
   try {
     const data = await travelAPI.getMyTravels();
-    console.log("🔍 여행 기록 데이터:", data);
-    if (data && data.length > 0) {
-      console.log("🔍 첫 번째 여행 기록의 imageUrls:", data[0].imageUrls);
-      console.log("🔍 imageUrls 타입:", typeof data[0].imageUrls);
-    }
+    // console.log("🔍 여행 기록 데이터:", data);
+    // if (data && data.length > 0) {
+    //   console.log("🔍 첫 번째 여행 기록의 imageUrls:", data[0].imageUrls);
+    //   console.log("🔍 imageUrls 타입:", typeof data[0].imageUrls);
+    // }
     myTravelLogs.value = data;
   } catch (error) {
     console.error("내 여행 기록 조회 실패:", error);
@@ -719,7 +821,7 @@ const loadKakaoMapScript = () => {
   });
 };
 
-// 카카오맵 초기화 및 관광지 데이터 로드
+// 카카오맵 초기화 (초기 관광지는 표시하지 않음)
 const initializeMap = async () => {
   window.kakao.maps.load(async () => {
     const container = document.getElementById("kakao-map");
@@ -729,14 +831,94 @@ const initializeMap = async () => {
     };
     map.value = new window.kakao.maps.Map(container, options);
 
-    // 초기 관광지 목록 조회 및 마커 표시
-    const spots = await fetchTouristSpots();
-    touristSpots.value = spots;
-    updateMapMarkers(spots);
+    // 초기에는 관광지 마커를 표시하지 않음 (필터링 후에만 표시)
   });
 };
 
 // ==================== API Functions ====================
+// 시도 목록 조회 (한국관광공사 API - areaCode2)
+const fetchAreaCodes = async () => {
+  const apiKey = import.meta.env.VITE_TOUR_API_KEY;
+
+  if (!apiKey || apiKey === "YOUR_TOUR_API_KEY") {
+    console.error("공공데이터 API 키를 .env.local에 설정해주세요.");
+    return [];
+  }
+
+  const params = {
+    numOfRows: 120,
+    pageNo: 1,
+    MobileOS: "ETC",
+    MobileApp: "Travelog",
+    _type: "json",
+  };
+
+  const queryString = new URLSearchParams(params).toString();
+  const url = `/api/tour/areaCode2?serviceKey=${apiKey}&${queryString}`;
+
+  try {
+    const response = await axios.get(url);
+    const data = response.data;
+
+    if (data.response?.body?.items?.item) {
+      const items = Array.isArray(data.response.body.items.item)
+        ? data.response.body.items.item
+        : [data.response.body.items.item];
+
+      return items.map((item) => ({
+        code: item.code,
+        name: item.name,
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error("시도 목록 조회 실패:", error);
+    return [];
+  }
+};
+
+// 시군구 목록 조회 (한국관광공사 API - areaCode2)
+const fetchSigunguCodes = async (areaCode) => {
+  const apiKey = import.meta.env.VITE_TOUR_API_KEY;
+
+  if (!apiKey || apiKey === "YOUR_TOUR_API_KEY") {
+    console.error("공공데이터 API 키를 .env.local에 설정해주세요.");
+    return [];
+  }
+
+  const params = {
+    numOfRows: 120,
+    pageNo: 1,
+    MobileOS: "ETC",
+    MobileApp: "Travelog",
+    _type: "json",
+    areaCode: areaCode,
+  };
+
+  const queryString = new URLSearchParams(params).toString();
+  const url = `/api/tour/areaCode2?serviceKey=${apiKey}&${queryString}`;
+
+  try {
+    const response = await axios.get(url);
+    const data = response.data;
+
+    if (data.response?.body?.items?.item) {
+      const items = Array.isArray(data.response.body.items.item)
+        ? data.response.body.items.item
+        : [data.response.body.items.item];
+
+      return items.map((item) => ({
+        code: item.code,
+        name: item.name,
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error("시군구 목록 조회 실패:", error);
+    return [];
+  }
+};
+
 // 관광지 상세 이미지 조회 (한국관광공사 API - detailImage2)
 const fetchTouristSpotImages = async (contentId) => {
   const apiKey = import.meta.env.VITE_TOUR_API_KEY;
@@ -973,11 +1155,96 @@ const createInfoWindowContent = (spot) => {
   `;
 };
 
+// ==================== Filter Functions ====================
+// 시도 선택 변경 시
+const handleAreaCodeChange = async () => {
+  // 시군구 초기화
+  selectedSigunguCode.value = '';
+  sigunguCodes.value = [];
+
+  // 시도가 선택되었으면 시군구 목록 불러오기
+  if (selectedAreaCode.value) {
+    sigunguCodes.value = await fetchSigunguCodes(selectedAreaCode.value);
+  }
+};
+
+// 관광지 조회 버튼 클릭
+const handleSearchTouristSpots = async () => {
+  // 기존 마커 제거
+  markers.value.forEach((marker) => marker.setMap(null));
+  markers.value = [];
+  touristSpots.value = [];
+
+  // 필터 선택 여부 확인
+  const missingFilters = [];
+  if (!selectedAreaCode.value) missingFilters.push('시도');
+  if (!selectedSigunguCode.value) missingFilters.push('시군구');
+  if (!selectedContentType.value) missingFilters.push('관광타입');
+
+  // 필수 필터가 선택되지 않은 경우 모달 표시
+  if (missingFilters.length > 0) {
+    infoMessage.value = `${missingFilters.join(', ')}를 선택해주세요.`;
+    showInfoModal.value = true;
+    return;
+  }
+
+  const queryParams = {};
+
+  // 시도 코드
+  if (selectedAreaCode.value) {
+    queryParams.areaCode = selectedAreaCode.value;
+  }
+
+  // 시군구 코드
+  if (selectedSigunguCode.value) {
+    queryParams.sigunguCode = selectedSigunguCode.value;
+  }
+
+  // 관광타입
+  if (selectedContentType.value) {
+    queryParams.contentTypeId = selectedContentType.value;
+  }
+
+  // 관광지 조회
+  const spots = await fetchTouristSpots(queryParams);
+  touristSpots.value = spots;
+  updateMapMarkers(spots);
+};
+
+// 필터 초기화
+const handleResetFilters = () => {
+  selectedAreaCode.value = '';
+  selectedSigunguCode.value = '';
+  selectedContentType.value = '';
+  sigunguCodes.value = [];
+
+  // 마커 제거하고 빈 지도로 초기화
+  markers.value.forEach((marker) => marker.setMap(null));
+  markers.value = [];
+  touristSpots.value = [];
+
+  // 지도를 초기 위치로 이동
+  if (map.value) {
+    const center = new window.kakao.maps.LatLng(36.3504, 127.3845);
+    map.value.setCenter(center);
+    map.value.setLevel(13);
+  }
+};
+
 // ==================== Modal Functions ====================
 // 모달 닫기
 const closeModal = () => {
   showImageModal.value = false;
   showFullImage.value = false;
+};
+
+// ESC 키로 모달 닫기
+const handleKeydown = (e) => {
+  if (e.key === 'Escape') {
+    if (showImageModal.value || showFullImage.value) {
+      closeModal();
+    }
+  }
 };
 
 // 다음 이미지로 이동
@@ -1054,15 +1321,19 @@ const closeTravelDetail = () => {
   showTravelDetailModal.value = false;
 };
 
-// 여행 기록 삭제
-const handleDeleteTravelLog = async (travelId) => {
-  if (!confirm("정말로 이 여행 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.")) {
-    return;
-  }
+// 여행 기록 삭제 (모달 열기)
+const handleDeleteTravelLog = (travelId) => {
+  travelToDelete.value = travelId;
+  showDeleteConfirm.value = true;
+};
+
+// 여행 기록 삭제 확인
+const confirmDeleteTravel = async () => {
+  if (!travelToDelete.value) return;
 
   try {
-    await travelAPI.deleteTravel(travelId);
-    alert("여행 기록이 삭제되었습니다.");
+    await travelAPI.deleteTravel(travelToDelete.value);
+    showDeleteConfirm.value = false;
 
     // 내 여행 기록 다시 불러오기
     await fetchMyTravelLogs();
@@ -1071,9 +1342,15 @@ const handleDeleteTravelLog = async (travelId) => {
     if (isMyMap.value) {
       updateMyMapMarkers();
     }
+
+    // 삭제 성공 메시지 표시
+    infoMessage.value = '여행 기록이 삭제되었습니다.';
+    showInfoModal.value = true;
   } catch (error) {
     console.error("여행 기록 삭제 실패:", error);
     alert("여행 기록 삭제에 실패했습니다.");
+  } finally {
+    travelToDelete.value = null;
   }
 };
 
@@ -1117,11 +1394,11 @@ const openAddressSearch = () => {
         if (status === window.kakao.maps.services.Status.OK) {
           travelForm.value.latitude = parseFloat(result[0].y);
           travelForm.value.longitude = parseFloat(result[0].x);
-          console.log('주소 변환 성공:', {
-            address: fullAddress,
-            lat: travelForm.value.latitude,
-            lng: travelForm.value.longitude
-          });
+          // console.log('주소 변환 성공:', {
+          //   address: fullAddress,
+          //   lat: travelForm.value.latitude,
+          //   lng: travelForm.value.longitude
+          // });
         } else {
           console.error('주소를 좌표로 변환하는데 실패했습니다.');
           alert('주소를 좌표로 변환하는데 실패했습니다. 다시 시도해주세요.');
@@ -1141,9 +1418,9 @@ const handleCreateTravel = async () => {
     // 선택된 이미지가 있으면 업로드 (단일 이미지)
     if (selectedFiles.value.length > 0) {
       try {
-        console.log('이미지 업로드 시작...');
+        // console.log('이미지 업로드 시작...');
         const uploadResult = await fileAPI.uploadImage(selectedFiles.value[0]);
-        console.log('이미지 업로드 결과:', uploadResult);
+        // console.log('이미지 업로드 결과:', uploadResult);
 
         // 응답에서 URL 추출
         const imageUrl = uploadResult.url || uploadResult.data?.url || uploadResult.imageUrl || uploadResult;
@@ -1152,7 +1429,7 @@ const handleCreateTravel = async () => {
           imageUrls = [imageUrl];
         }
 
-        console.log('처리된 이미지 URL:', imageUrls);
+//         console.log('처리된 이미지 URL:', imageUrls);
       } catch (uploadError) {
         console.warn('이미지 업로드 실패:', uploadError);
         // 이미지 업로드 실패 시에도 계속 진행할지 확인
@@ -1168,7 +1445,7 @@ const handleCreateTravel = async () => {
       imageUrls: imageUrls
     };
 
-    console.log('여행 기록 작성 데이터:', travelData);
+//     console.log('여행 기록 작성 데이터:', travelData);
     const newTravel = await travelAPI.createTravel(travelData);
 
     // 성공 후 폼 초기화
@@ -1201,8 +1478,6 @@ const handleCreateTravel = async () => {
     if (isMyMap.value) {
       updateMyMapMarkers();
     }
-
-    alert("Travel record created successfully!");
   } catch (error) {
     console.error("여행 기록 작성 실패:", error);
     alert("Failed to create travel record. Please try again.");
@@ -1254,7 +1529,7 @@ const updateMyMapMarkers = () => {
   travelLogs.value.forEach((log) => {
     // 실제 좌표가 있는 경우만 마커 생성
     if (!log.latitude || !log.longitude) {
-      console.log(`여행 기록 "${log.title}"에 위치 정보가 없습니다.`);
+//       console.log(`여행 기록 "${log.title}"에 위치 정보가 없습니다.`);
       return;
     }
 
@@ -1453,6 +1728,9 @@ const createMyMapInfoWindowContent = (log) => {
 // 컴포넌트 마운트 시 카카오맵 초기화
 onMounted(async () => {
   try {
+    // 시도 목록 불러오기
+    areaCodes.value = await fetchAreaCodes();
+
     // 여행 로그 불러오기
     // Travel Map 모드에서도 로그인 시 내 여행 기록 불러오기 (Recent Travel Logs 표시용)
     if (store.isLoggedIn) {
@@ -1466,9 +1744,17 @@ onMounted(async () => {
 
     await loadKakaoMapScript();
     initializeMap();
+
+    // ESC 키 이벤트 리스너 등록
+    document.addEventListener('keydown', handleKeydown);
   } catch (error) {
     console.error("카카오맵 로드 실패:", error);
   }
+});
+
+onUnmounted(() => {
+  // ESC 키 이벤트 리스너 제거
+  document.removeEventListener('keydown', handleKeydown);
 });
 
 // 로그인 상태 변화 감지 - 로그인 시 내 여행 기록 불러오기

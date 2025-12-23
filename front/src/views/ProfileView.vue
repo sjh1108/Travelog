@@ -19,7 +19,7 @@
                   @click="handleFollow"
                   :disabled="isFollowLoading"
                   :class="[
-                    'px-6 py-2 rounded-lg font-semibold transition-all duration-200',
+                    'px-3 py-1 rounded-lg font-semibold transition-all duration-200',
                     isFollowing
                       ? 'bg-gray-200 text-gray-800 border-2 border-gray-300 hover:bg-gray-300'
                       : 'bg-blue-600 text-white border-2 border-blue-600 hover:bg-blue-700',
@@ -117,9 +117,9 @@ const fetchUserInfo = async () => {
     }
 
     // 다른 사용자 정보 조회
-    console.log('사용자 정보 조회:', userId)
+    // console.log('사용자 정보 조회:', userId)
     const data = await userAPI.getUserInfo(userId)
-    console.log('받은 사용자 정보:', data)
+    // console.log('받은 사용자 정보:', data)
     userInfo.value = data
   } catch (error) {
     console.error('사용자 정보 조회 실패:', error)
@@ -160,7 +160,7 @@ const user = computed(() => {
     return userPost.user
   }
 
-  console.warn('사용자 정보를 찾을 수 없습니다:', userId)
+  // console.warn('사용자 정보를 찾을 수 없습니다:', userId)
   return null
 })
 
@@ -184,9 +184,9 @@ const handleFollow = async () => {
 
   isFollowLoading.value = true
   try {
-    console.log('팔로우 토글 시작:', userId)
+    // console.log('팔로우 토글 시작:', userId)
     const response = await followAPI.toggleFollow(userId)
-    console.log('팔로우 토글 응답:', response)
+    // console.log('팔로우 토글 응답:', response)
 
     // 로컬 스토어 상태 업데이트
     store.toggleFollow(userId)

@@ -7,41 +7,47 @@
 
         <div v-if="store.currentUser" class="space-y-8">
           <!-- Profile Section -->
-          <div class="bg-card border border-border rounded-lg p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-bold">Profile</h2>
-              <button
-                @click="openEditModal"
-                class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-semibold"
-              >
-                회원정보 수정
-              </button>
-            </div>
-            <div class="flex items-start gap-6">
+          <div class="bg-card border border-border rounded-lg p-8">
+            <div class="flex items-start gap-8">
+              <!-- 프로필 이미지 -->
               <img
                 :src="userProfileImage"
                 :alt="store.currentUser.nickname"
-                class="w-24 h-24 rounded-full object-cover"
+                class="w-36 h-36 rounded-full object-cover flex-shrink-0 ring-2 ring-border"
               />
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold mb-2">{{ store.currentUser.nickname }}</h3>
-                <p class="text-foreground/80 mb-4">
-                  {{ store.currentUser.bio || (store.currentUser.nickname + '입니다.') }}
-                </p>
-                <div class="flex gap-6 text-sm mb-4">
+
+              <!-- 프로필 정보 -->
+              <div class="flex-1 min-w-0 flex flex-col justify-center">
+                <div class="flex items-center justify-between gap-4 mb-6">
+                  <h3 class="text-3xl font-bold">{{ store.currentUser.nickname }}</h3>
+                  <button
+                    @click="openEditModal"
+                    class="px-3.5 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium whitespace-nowrap flex-shrink-0 shadow-sm"
+                  >
+                    프로필 편집
+                  </button>
+                </div>
+
+                <!-- 통계 -->
+                <div class="flex gap-10 mb-5">
                   <div>
-                    <span class="font-bold">{{ myPosts.length }}</span>
-                    <span class="text-foreground/60 ml-1">posts</span>
+                    <span class="font-bold text-xl">{{ myPosts.length }}</span>
+                    <span class="text-foreground/60 ml-2">게시물</span>
                   </div>
                   <div>
-                    <span class="font-bold">{{ store.currentUser.followerCount }}</span>
-                    <span class="text-foreground/60 ml-1">followers</span>
+                    <span class="font-bold text-xl">{{ store.currentUser.followerCount || 0 }}</span>
+                    <span class="text-foreground/60 ml-2">팔로워</span>
                   </div>
                   <div>
-                    <span class="font-bold">{{ store.currentUser.followingCount }}</span>
-                    <span class="text-foreground/60 ml-1">following</span>
+                    <span class="font-bold text-xl">{{ store.currentUser.followingCount || 0 }}</span>
+                    <span class="text-foreground/60 ml-2">팔로잉</span>
                   </div>
                 </div>
+
+                <!-- 자기소개 -->
+                <p class="text-foreground/70 leading-relaxed">
+                  {{ store.currentUser.bio || (store.currentUser.nickname + '입니다.') }}
+                </p>
               </div>
             </div>
           </div>
@@ -262,6 +268,13 @@
         </div>
       </div>
     </div>
+
+    <!-- 정보 모달 -->
+    <InfoModal
+      :is-open="showInfoModal"
+      :message="infoMessage"
+      :on-close="closeInfoModal"
+    />
   </div>
 </template>
 
@@ -271,6 +284,7 @@ import { useRouter } from 'vue-router'
 import { X } from 'lucide-vue-next'
 import Navigation from '@/components/Navigation.vue'
 import Footer from '@/components/Footer.vue'
+import InfoModal from '@/components/InfoModal.vue'
 import { useAppStore } from '@/stores/app'
 import { postAPI, userAPI, fileAPI } from '@/api/api'
 import { getFullImageUrl, getProfileImageUrl } from '@/utils/imageUtils'
@@ -293,6 +307,15 @@ const profileImageInput = ref(null)
 // 회원탈퇴 관련 상태
 const showDeleteConfirmModal = ref(false)
 const isDeleting = ref(false)
+
+// 정보 모달 관련 상태
+const showInfoModal = ref(false)
+const infoMessage = ref('')
+
+const closeInfoModal = () => {
+  showInfoModal.value = false
+  infoMessage.value = ''
+}
 
 // 회원정보 수정 모달 열 때 현재 정보로 초기화
 const openEditModal = () => {
@@ -334,9 +357,9 @@ const handleUpdateProfile = async () => {
 
     // 1. 프로필 이미지가 변경된 경우 먼저 업로드
     if (editForm.value.profileImage) {
-      console.log('프로필 이미지 업로드 중...')
+      // console.log('프로필 이미지 업로드 중...')
       profileImageUrl = await fileAPI.uploadImage(editForm.value.profileImage)
-      console.log('업로드된 이미지 URL:', profileImageUrl)
+      // console.log('업로드된 이미지 URL:', profileImageUrl)
     }
 
     // 2. 회원정보 수정 API 호출
@@ -346,9 +369,9 @@ const handleUpdateProfile = async () => {
       profileImage: profileImageUrl
     }
 
-    console.log('회원정보 수정 요청:', updateData)
+    // console.log('회원정보 수정 요청:', updateData)
     const response = await userAPI.updateProfile(updateData)
-    console.log('회원정보 수정 성공:', response)
+    // console.log('회원정보 수정 성공:', response)
 
     // 3. 스토어의 현재 사용자 정보 업데이트
     const updatedUser = {
@@ -362,7 +385,6 @@ const handleUpdateProfile = async () => {
     // 4. localStorage도 업데이트
     localStorage.setItem('user', JSON.stringify(updatedUser))
 
-    alert('회원정보가 수정되었습니다.')
     showEditModal.value = false
 
     // 5. 게시물 목록 새로고침 (프로필 이미지/닉네임 반영)
@@ -404,10 +426,15 @@ const handleDeleteAccount = async () => {
     // 스토어 상태 초기화
     store.logout()
 
-    alert('회원탈퇴가 완료되었습니다.')
+    // 삭제 완료 모달 표시
+    showDeleteConfirmModal.value = false
+    infoMessage.value = '회원탈퇴가 완료되었습니다.'
+    showInfoModal.value = true
 
-    // 홈으로 이동
-    router.push('/')
+    // 모달이 닫힌 후 홈으로 이동
+    setTimeout(() => {
+      router.push('/')
+    }, 1500)
   } catch (error) {
     console.error('회원탈퇴 실패:', error)
     alert('회원탈퇴에 실패했습니다. 다시 시도해주세요.')
@@ -420,9 +447,9 @@ const handleDeleteAccount = async () => {
 // 사용자 정보 갱신
 const fetchUserInfo = async () => {
   try {
-    console.log('MyPage - 사용자 정보 조회 시작...')
+    // console.log('MyPage - 사용자 정보 조회 시작...')
     const userData = await userAPI.getMyInfo()
-    console.log('MyPage - 받은 사용자 데이터:', userData)
+    // console.log('MyPage - 받은 사용자 데이터:', userData)
 
     // 스토어 업데이트
     const updatedUser = {
@@ -439,9 +466,9 @@ const fetchUserInfo = async () => {
 // 게시물 불러오기
 const fetchPosts = async () => {
   try {
-    console.log('MyPage - 게시물 조회 시작...')
+    // console.log('MyPage - 게시물 조회 시작...')
     const data = await postAPI.getPosts()
-    console.log('MyPage - 받은 게시물 데이터:', data)
+    // console.log('MyPage - 받은 게시물 데이터:', data)
 
     // 백엔드 응답을 프론트엔드 형식으로 변환
     const postsWithUser = data.map(post => {
@@ -464,11 +491,11 @@ const fetchPosts = async () => {
         }
       }
 
-      console.warn(`게시물 ${post.id}에 작성자 정보가 없습니다.`)
+      // console.warn(`게시물 ${post.id}에 작성자 정보가 없습니다.`)
       return post
     })
 
-    console.log('MyPage - 처리된 게시물:', postsWithUser)
+    // console.log('MyPage - 처리된 게시물:', postsWithUser)
     store.setPosts(postsWithUser)
   } catch (error) {
     console.error('MyPage - 게시물 조회 실패:', error)
@@ -488,9 +515,9 @@ const myPosts = computed(() => {
 
   const currentUserId = store.currentUser.id || store.currentUser.email
 
-  console.log('MyPage - currentUser:', store.currentUser)
-  console.log('MyPage - currentUserId:', currentUserId)
-  console.log('MyPage - 전체 게시물:', store.posts)
+  // console.log('MyPage - currentUser:', store.currentUser)
+  // console.log('MyPage - currentUserId:', currentUserId)
+  // console.log('MyPage - 전체 게시물:', store.posts)
 
   const filtered = store.posts.filter(post => {
     const match = post.userId === currentUserId ||
@@ -498,14 +525,14 @@ const myPosts = computed(() => {
            post.userId === store.currentUser.email ||
            post.writerEmail === store.currentUser.email
 
-    if (match) {
-      console.log('매칭된 게시물:', post)
-    }
+    // if (match) {
+    //   console.log('매칭된 게시물:', post)
+    // }
 
     return match
   })
 
-  console.log('MyPage - 내 게시물:', filtered)
+  // console.log('MyPage - 내 게시물:', filtered)
   return filtered
 })
 

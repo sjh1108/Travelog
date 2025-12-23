@@ -43,25 +43,25 @@ const props = defineProps({
 })
 
 // 디버깅: LikeButton props 확인
-console.log('LikeButton - postId:', props.postId)
-console.log('LikeButton - initialIsLiked:', props.initialIsLiked)
-console.log('LikeButton - initialLikeCount:', props.initialLikeCount)
+// console.log('LikeButton - postId:', props.postId)
+// console.log('LikeButton - initialIsLiked:', props.initialIsLiked)
+// console.log('LikeButton - initialLikeCount:', props.initialLikeCount)
 
 const animateCount = ref(false)
 const isLiked = ref(props.initialIsLiked || false)
 const likeCount = ref(props.initialLikeCount || 0)
 
-console.log('LikeButton - isLiked.value:', isLiked.value)
-console.log('LikeButton - likeCount.value:', likeCount.value)
+// console.log('LikeButton - isLiked.value:', isLiked.value)
+// console.log('LikeButton - likeCount.value:', likeCount.value)
 
 // props 변경 감지 - 페이지 이동 후 돌아왔을 때 업데이트
 watch(() => props.initialIsLiked, (newValue) => {
-  console.log('props.initialIsLiked 변경:', newValue)
+//   console.log('props.initialIsLiked 변경:', newValue)
   isLiked.value = newValue || false
 })
 
 watch(() => props.initialLikeCount, (newValue) => {
-  console.log('props.initialLikeCount 변경:', newValue)
+//   console.log('props.initialLikeCount 변경:', newValue)
   likeCount.value = newValue || 0
 })
 
@@ -69,7 +69,7 @@ const handleLikeClick = async () => {
   try {
     // API 호출
     const response = await likeAPI.toggleLike(props.postId)
-    console.log('좋아요 응답:', response)
+//     console.log('좋아요 응답:', response)
 
     // 백엔드 응답으로 상태 업데이트
     if (response.isLiked !== undefined) {

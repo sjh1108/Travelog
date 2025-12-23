@@ -10,8 +10,14 @@
         @click.stop
       >
         <!-- 헤더 -->
-        <div class="px-6 py-4 border-b border-border">
+        <div class="px-6 py-4 border-b border-border relative">
           <h3 class="text-lg font-semibold text-foreground">{{ title }}</h3>
+          <button
+            @click="onCancel"
+            class="absolute top-4 right-4 text-foreground/60 hover:text-foreground transition-colors"
+          >
+            ×
+          </button>
         </div>
 
         <!-- 내용 -->

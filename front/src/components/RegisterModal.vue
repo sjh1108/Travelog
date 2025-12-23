@@ -326,11 +326,11 @@ const handleRegister = async () => {
     // 프로필 이미지 업로드 (선택한 경우)
     if (selectedFile.value) {
       try {
-        console.log('=== 프로필 이미지 업로드 시작 ===')
-        console.log('파일:', selectedFile.value.name)
+//         console.log('=== 프로필 이미지 업로드 시작 ===')
+//         console.log('파일:', selectedFile.value.name)
         const uploadResult = await fileAPI.uploadImage(selectedFile.value)
-        console.log('업로드 API 응답:', uploadResult)
-        console.log('응답 타입:', typeof uploadResult)
+//         console.log('업로드 API 응답:', uploadResult)
+//         console.log('응답 타입:', typeof uploadResult)
 
         // 업로드 결과에서 이미지 URL 추출
         const serverImageUrl = uploadResult.url || uploadResult.imageUrl ||
@@ -338,10 +338,10 @@ const handleRegister = async () => {
 
         if (typeof uploadResult === 'string') {
           formData.value.profileImage = uploadResult
-          console.log('✅ 프로필 이미지 설정 완료:', formData.value.profileImage)
+//           console.log('✅ 프로필 이미지 설정 완료:', formData.value.profileImage)
         } else if (serverImageUrl) {
           formData.value.profileImage = serverImageUrl
-          console.log('✅ 프로필 이미지 설정 완료:', formData.value.profileImage)
+//           console.log('✅ 프로필 이미지 설정 완료:', formData.value.profileImage)
         } else {
           console.warn('❌ 이미지 업로드 결과가 불명확합니다:', uploadResult)
           formData.value.profileImage = ''
@@ -352,7 +352,7 @@ const handleRegister = async () => {
         formData.value.profileImage = ''
       }
     } else {
-      console.log('프로필 이미지 선택 안 함')
+//       console.log('프로필 이미지 선택 안 함')
     }
 
     const response = await axios.post('/api/users/join', formData.value)
@@ -377,7 +377,7 @@ const handleRegister = async () => {
         user.profileImage = formData.value.profileImage || '/default-profile.svg'
       }
 
-      console.log('회원가입 성공 - 사용자 정보:', user)
+//       console.log('회원가입 성공 - 사용자 정보:', user)
       store.setCurrentUser(user)
       emit('update:modelValue', false)
       router.push('/map')

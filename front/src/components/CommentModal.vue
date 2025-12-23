@@ -48,18 +48,22 @@
               :key="comment.id"
               class="flex items-start gap-3 group"
             >
-              <img
-                :src="getImageUrl(comment.user?.profileImage)"
-                :alt="comment.user?.nickname || 'User'"
-                class="w-8 h-8 rounded-full"
-              />
+              <router-link :to="getCommentProfileLink(comment)">
+                <img
+                  :src="getImageUrl(comment.user?.profileImage)"
+                  :alt="comment.user?.nickname || 'User'"
+                  class="w-8 h-8 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                />
+              </router-link>
               <div class="flex-1">
                 <div class="flex items-start justify-between gap-2">
                   <div class="flex-1">
                     <p class="text-sm">
-                      <span class="font-semibold">{{
-                        comment.user.nickname
-                      }}</span>
+                      <router-link :to="getCommentProfileLink(comment)">
+                        <span class="font-semibold cursor-pointer hover:text-primary transition-colors">{{
+                          comment.user.nickname
+                        }}</span>
+                      </router-link>
                       <span class="ml-2 text-foreground/80">{{
                         comment.content
                       }}</span>
@@ -290,6 +294,35 @@ const confirmDelete = async () => {
 const cancelDelete = () => {
   showDeleteConfirm.value = false;
   commentToDelete.value = null;
+};
+
+// 댓글 작성자 프로필 링크 생성
+const getCommentProfileLink = (comment) => {
+  const commentUserId =
+    comment.user?.id ||
+    comment.user?.email ||
+    comment.userId ||
+    comment.writerEmail ||
+    comment.userEmail;
+  const currentUserId = store.currentUser?.id || store.currentUser?.email;
+
+  // commentUserId가 없으면 기본값 반환
+  if (!commentUserId) {
+    return "/feed";
+  }
+
+  // 현재 로그인된 사용자와 댓글 작성자가 같으면 /mypage로 이동
+  if (
+    currentUserId &&
+    (commentUserId === currentUserId ||
+      commentUserId === store.currentUser?.email ||
+      commentUserId === store.currentUser?.id)
+  ) {
+    return "/mypage";
+  }
+
+  // 다른 사용자면 프로필 페이지로 이동
+  return `/profile/${commentUserId}`;
 };
 </script>
 

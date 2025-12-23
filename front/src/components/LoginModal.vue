@@ -191,7 +191,7 @@ const handleLogin = async () => {
       user.bio = user.nickname + '입니다.'
     }
 
-    console.log('로그인 성공 - 사용자 정보:', user)
+//     console.log('로그인 성공 - 사용자 정보:', user)
     store.setCurrentUser(user)
 
     emit('update:modelValue', false)
