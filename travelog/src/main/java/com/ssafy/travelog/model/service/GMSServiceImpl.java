@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,8 +30,8 @@ public class GMSServiceImpl implements GMSService {
     private final ObjectMapper objectMapper;
 
     @Override
-    public String getChatResponse(String userPrompt) {
-        ChatRequest requestDto = ChatRequest.of(userPrompt);
+    public String sendMessage(List<String> userHistories, List<String> userThemes) {
+        ChatRequest requestDto = ChatRequest.of(userHistories, userThemes);
 
         // 1. 순수 Apache HttpClient 생성 (스프링 설정 무시)
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {

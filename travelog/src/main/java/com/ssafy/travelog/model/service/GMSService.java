@@ -1,5 +1,7 @@
 package com.ssafy.travelog.model.service;
 
+import java.util.List;
+
 public interface GMSService {
-    String getChatResponse(String userPrompt);
+    String sendMessage(List<String> userHistories, List<String> userThemes);
 }

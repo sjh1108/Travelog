@@ -1,4 +1,24 @@
-### GMS 임시 테스트 요청
+### 1. [메인 테스트] 여러 여행 기록과 여러 테마를 동시에 보냄 (방법 1: 파라미터 반복)
+# 상황: 사용자가 제주도(국내), 오사카(해외/맛집), 스위스(해외/자연)를 다녀왔고,
+#       이번에는 힐링, 가성비, 바다를 모두 원함.
+GET http://localhost:8080/api/gms?history=제주도&history=오사카&history=스위스&theme=힐링&theme=가성비&theme=바다
+Accept: */*
+User-Agent: curl/8.13.0
 
-GET http://localhost:8080/api/gms?prompt=SSAFY에 대해 알려줘
-Accept: text/plain
+### 2. [단순 테스트] 기록 1개, 테마 1개
+# 상황: 부산만 다녀왔고, 야경을 보고 싶음
+GET http://localhost:8080/api/gms?history=부산&theme=야경
+Accept: */*
+User-Agent: curl/8.13.0
+
+### 3. [기록 없음] 처음 여행 가는 사람 (테마만 존재)
+# 상황: 과거 기록은 없고, 부모님과 함께 맛집 투어를 하고 싶음
+GET http://localhost:8080/api/gms?theme=부모님 효도&theme=맛집 탐방
+Accept: */*
+User-Agent: curl/8.13.0
+
+### 4. [테마 없음] 결정 장애 (기록만 존재)
+# 상황: 강릉, 속초를 다녀왔는데 어디 갈지 모르겠음 (AI가 기록 기반으로 추천)
+GET http://localhost:8080/api/gms?history=강릉&history=속초
+Accept: */*
+User-Agent: curl/8.13.0
