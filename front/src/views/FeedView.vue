@@ -39,7 +39,7 @@
     <CommentModal
       v-if="selectedPost"
       :post="selectedPost"
-      :is-open="!!selectedPostId"
+      :is-open="!!selectedPostId && !!selectedPost"
       :on-close="() => setSelectedPostId(null)"
     />
   </div>
@@ -79,13 +79,14 @@ const fetchPosts = async () => {
       }
 
       // nickname, profileImage가 있으면 user 객체로 변환
-      if (post.nickname || post.profileImage || post.writerEmail) {
+      const email = post.writerEmail || post.userEmail
+      if (post.nickname || post.profileImage || email) {
         return {
           ...post,
-          userId: post.writerEmail, // userId가 없으면 writerEmail 사용
+          userId: email, // userId가 없으면 writerEmail/userEmail 사용
           user: {
-            id: post.writerEmail,
-            email: post.writerEmail,
+            id: email,
+            email: email,
             nickname: post.nickname || 'Unknown User',
             profileImage: post.profileImage || '/default-profile.svg'
           }

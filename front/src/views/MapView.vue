@@ -9,7 +9,7 @@
           </h1>
           <div class="flex gap-2">
             <button
-              v-if="store.isLoggedIn"
+              v-if="store.isLoggedIn && isMyMap"
               @click="showTravelForm = true"
               class="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors"
             >
@@ -35,20 +35,30 @@
         <!-- Travel Logs (최근 3개) -->
         <div class="mt-8">
           <h2 class="text-2xl font-bold mb-4">Recent Travel Logs</h2>
-          <div v-if="recentTravelLogs.length === 0" class="text-center py-8 text-foreground/50">
+          <div
+            v-if="recentTravelLogs.length === 0"
+            class="text-center py-8 text-foreground/50"
+          >
             No travel logs yet
           </div>
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            v-else
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          >
             <div
               v-for="log in recentTravelLogs"
               :key="log.id"
               class="bg-card border border-border rounded-lg p-4 hover:shadow-lg transition-shadow"
             >
-              <h3 class="font-bold mb-2">{{ log.title || log.locationName || 'Untitled' }}</h3>
+              <h3 class="font-bold mb-2">
+                {{ log.title || log.locationName || "Untitled" }}
+              </h3>
               <p class="text-sm text-foreground/60 mb-2">
                 {{ formatDate(log.startDate || log.date || log.visitDate) }}
               </p>
-              <p class="text-sm text-foreground/80">{{ log.review || log.description || 'No description' }}</p>
+              <p class="text-sm text-foreground/80">
+                {{ log.review || log.description || "No description" }}
+              </p>
             </div>
           </div>
         </div>
@@ -205,7 +215,9 @@
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium mb-2">Start Date *</label>
+                <label class="block text-sm font-medium mb-2"
+                  >Start Date *</label
+                >
                 <input
                   v-model="travelForm.startDate"
                   type="date"
@@ -251,7 +263,9 @@
                 id="isPublic"
                 class="w-4 h-4"
               />
-              <label for="isPublic" class="text-sm font-medium">Make this travel public</label>
+              <label for="isPublic" class="text-sm font-medium"
+                >Make this travel public</label
+              >
             </div>
 
             <div class="flex gap-2 justify-end">
@@ -267,7 +281,7 @@
                 :disabled="isSubmitting"
                 class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
-                {{ isSubmitting ? 'Creating...' : 'Create' }}
+                {{ isSubmitting ? "Creating..." : "Create" }}
               </button>
             </div>
           </form>
@@ -311,13 +325,13 @@ const showFullImage = ref(false); // 원본 이미지 전체화면 표시 여부
 const showTravelForm = ref(false);
 const isSubmitting = ref(false);
 const travelForm = ref({
-  title: '',
-  startDate: '',
-  endDate: '',
+  title: "",
+  startDate: "",
+  endDate: "",
   totalCost: 0,
-  theme: '',
-  isPublic: true
-})
+  theme: "",
+  isPublic: true,
+});
 
 // ==================== Computed & Utility Functions ====================
 const travelLogs = computed(() => store.travelLogs);
@@ -343,7 +357,7 @@ const fetchMyTravelLogs = async () => {
     const data = await travelAPI.getMyTravels();
     store.setTravelLogs(data);
   } catch (error) {
-    console.error('내 여행 기록 조회 실패:', error);
+    console.error("내 여행 기록 조회 실패:", error);
   }
 };
 
@@ -353,19 +367,19 @@ const fetchAllTravelLogs = async () => {
     const data = await travelAPI.getTravels();
     store.setTravelLogs(data);
   } catch (error) {
-    console.error('전체 여행 기록 조회 실패:', error);
+    console.error("전체 여행 기록 조회 실패:", error);
   }
 };
 
 // 날짜 포맷팅 (예: January 1, 2024)
 const formatDate = (dateString) => {
-  if (!dateString) return 'Date not available';
+  if (!dateString) return "Date not available";
 
   const date = new Date(dateString);
 
   // Invalid Date 체크
   if (isNaN(date.getTime())) {
-    return 'Invalid date';
+    return "Invalid date";
   }
 
   return date.toLocaleDateString("en-US", {
@@ -665,12 +679,12 @@ const handleCreateTravel = async () => {
 
     // 성공 후 폼 초기화
     travelForm.value = {
-      title: '',
-      startDate: '',
-      endDate: '',
+      title: "",
+      startDate: "",
+      endDate: "",
       totalCost: 0,
-      theme: '',
-      isPublic: true
+      theme: "",
+      isPublic: true,
     };
 
     // 모달 닫기
@@ -679,10 +693,10 @@ const handleCreateTravel = async () => {
     // 여행 기록 다시 불러오기
     await fetchMyTravelLogs();
 
-    alert('Travel record created successfully!');
+    alert("Travel record created successfully!");
   } catch (error) {
-    console.error('여행 기록 작성 실패:', error);
-    alert('Failed to create travel record. Please try again.');
+    console.error("여행 기록 작성 실패:", error);
+    alert("Failed to create travel record. Please try again.");
   } finally {
     isSubmitting.value = false;
   }
@@ -691,14 +705,19 @@ const handleCreateTravel = async () => {
 // ==================== Map Mode Toggle ====================
 // 맵 모드 토글 함수
 const toggleMapMode = async () => {
+  // "My Map"으로 가려고 하는데, 로그인이 안되어있을 경우
+  if (!isMyMap.value && !store.isLoggedIn) {
+    store.showLoginModal = true;
+    return; // 여기서 함수 실행을 중단
+  }
+
   isMyMap.value = !isMyMap.value;
 
   // 모드에 따라 여행 기록 불러오기 및 마커 업데이트
   if (isMyMap.value) {
     // My Map: 내 여행 기록 불러오기
-    if (store.isLoggedIn) {
-      await fetchMyTravelLogs();
-    }
+    // 이 시점에 도달했다면, My Map으로 전환하는 경우 반드시 로그인 되어 있음
+    await fetchMyTravelLogs();
     updateMyMapMarkers();
   } else {
     // Travel Map: 전체 공개 여행 기록 불러오기

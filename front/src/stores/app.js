@@ -95,6 +95,11 @@ export const useAppStore = defineStore('app', () => {
     newComments.get(postId).push(comment)
     comments.value = newComments
   }
+  const setComments = (postId, commentsList) => {
+    const newComments = new Map(comments.value)
+    newComments.set(postId, commentsList)
+    comments.value = newComments
+  }
   const getComments = (postId) => {
     return comments.value.get(postId) || []
   }
@@ -129,6 +134,7 @@ export const useAppStore = defineStore('app', () => {
     setFollowing,
     comments,
     addComment,
+    setComments,
     getComments,
     travelLogs,
     setTravelLogs,

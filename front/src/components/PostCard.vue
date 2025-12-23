@@ -45,7 +45,7 @@
       />
 
       <button
-        @click="onCommentClick(post.id)"
+        @click.stop="handleCommentButtonClick"
         class="flex items-center gap-1 text-foreground/60 hover:text-primary transition-colors group"
         title="Comment"
       >
@@ -70,7 +70,7 @@
     <!-- Comments Preview -->
     <div class="px-4 pb-4">
       <button
-        @click="onCommentClick(post.id)"
+        @click.stop="handleViewCommentsClick"
         class="text-xs text-foreground/50 hover:text-foreground/70 transition-colors"
       >
         View all {{ commentCount }} comments
@@ -102,11 +102,6 @@ const props = defineProps({
 })
 
 const store = useAppStore()
-
-// 디버깅: PostCard에서 받은 post 데이터 확인
-console.log('PostCard - post.id:', props.post.id)
-console.log('PostCard - isLiked:', props.post.isLiked)
-console.log('PostCard - likeCount:', props.post.likeCount)
 
 const commentCount = computed(() => {
   const comments = store.getComments(props.post.id)
@@ -145,5 +140,17 @@ const formatDate = (dateString) => {
     day: 'numeric',
     year: 'numeric',
   })
+}
+
+const handleCommentButtonClick = () => {
+  if (props.onCommentClick) {
+    props.onCommentClick(props.post.id)
+  }
+}
+
+const handleViewCommentsClick = () => {
+  if (props.onCommentClick) {
+    props.onCommentClick(props.post.id)
+  }
 }
 </script>

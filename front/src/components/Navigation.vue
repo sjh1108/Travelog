@@ -61,7 +61,7 @@
               <!-- 알림 드롭다운 메뉴 -->
               <div
                 v-if="showNotifications"
-                class="absolute right-0 mt-2 w-96 max-h-[500px] overflow-y-auto bg-background border border-border rounded-lg shadow-lg z-50"
+                class="absolute right-0 mt-2 w-96 bg-background border border-border rounded-lg shadow-lg z-50"
               >
                 <!-- 헤더 -->
                 <div class="flex items-center justify-between p-4 border-b border-border">
@@ -79,7 +79,7 @@
                 <div v-if="notifications.length === 0" class="p-8 text-center text-foreground/50">
                   No notifications yet
                 </div>
-                <div v-else class="divide-y divide-border">
+                <div v-else class="divide-y divide-border max-h-[450px] overflow-y-auto">
                   <div
                     v-for="notification in notifications"
                     :key="notification.id"

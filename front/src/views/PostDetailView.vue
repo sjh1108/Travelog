@@ -67,14 +67,25 @@
                     :alt="comment.user?.nickname || 'User'"
                     class="w-8 h-8 rounded-full"
                   />
-                  <div>
-                    <p class="text-sm">
-                      <span class="font-semibold">{{ comment.user?.nickname || 'Unknown User' }}</span>
-                      <span class="ml-2 text-foreground/80">{{ comment.content }}</span>
-                    </p>
-                    <p class="text-xs text-foreground/50 mt-1">
-                      {{ formatDate(comment.createdAt) }}
-                    </p>
+                  <div class="flex-1">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="flex-1">
+                        <p class="text-sm">
+                          <span class="font-semibold">{{ comment.user?.nickname || 'Unknown User' }}</span>
+                          <span class="ml-2 text-foreground/80">{{ comment.content }}</span>
+                        </p>
+                        <p class="text-xs text-foreground/50 mt-1">
+                          {{ formatDate(comment.createdAt) }}
+                        </p>
+                      </div>
+                      <button
+                        v-if="canDeleteComment(comment)"
+                        @click="handleDeleteComment(comment.id)"
+                        class="text-red-500/60 hover:text-red-500 text-xs px-2 py-1 rounded hover:bg-red-500/10 transition-all flex-shrink-0"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -117,6 +128,18 @@
       </div>
     </main>
     <Footer />
+
+    <!-- 삭제 확인 모달 -->
+    <ConfirmModal
+      :is-open="showDeleteConfirm"
+      title="댓글 삭제"
+      message="정말로 이 댓글을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
+      confirm-text="삭제"
+      cancel-text="취소"
+      :danger="true"
+      :on-confirm="confirmDelete"
+      :on-cancel="cancelDelete"
+    />
   </div>
 </template>
 
@@ -127,6 +150,7 @@ import { MessageCircle } from 'lucide-vue-next'
 import Navigation from '@/components/Navigation.vue'
 import Footer from '@/components/Footer.vue'
 import LikeButton from '@/components/LikeButton.vue'
+import ConfirmModal from '@/components/ConfirmModal.vue'
 import { useAppStore } from '@/stores/app'
 import { getFullImageUrl, getProfileImageUrl } from '@/utils/imageUtils'
 import { commentAPI, postAPI } from '@/api/api'
@@ -137,13 +161,13 @@ const store = useAppStore()
 const postId = route.params.id
 const newComment = ref('')
 const localComments = ref([]) // 로컬에 댓글 저장
+const showDeleteConfirm = ref(false)
+const commentToDelete = ref(null)
 
 // 게시물 불러오기
 const fetchPosts = async () => {
   try {
-    console.log('PostDetail - 게시물 조회 시작...')
     const data = await postAPI.getPosts()
-    console.log('PostDetail - 받은 게시물 데이터:', data)
 
     // 백엔드 응답을 프론트엔드 형식으로 변환
     const postsWithUser = data.map(post => {
@@ -151,28 +175,26 @@ const fetchPosts = async () => {
         return post
       }
 
-      if (post.nickname || post.profileImage || post.writerEmail) {
+      const email = post.writerEmail || post.userEmail
+      if (post.nickname || post.profileImage || email) {
         return {
           ...post,
-          userId: post.writerEmail,
+          userId: email,
           user: {
-            id: post.writerEmail,
-            email: post.writerEmail,
+            id: email,
+            email: email,
             nickname: post.nickname || 'Unknown User',
             profileImage: post.profileImage || '/default-profile.svg'
           }
         }
       }
 
-      console.warn(`게시물 ${post.id}에 작성자 정보가 없습니다.`)
       return post
     })
 
-    console.log('PostDetail - 처리된 게시물:', postsWithUser)
     store.setPosts(postsWithUser)
   } catch (error) {
-    console.error('PostDetail - 게시물 조회 실패:', error)
-    console.error('PostDetail - 에러 상세:', error.response)
+    console.error('게시물 조회 실패:', error)
     store.setPosts([])
   }
 }
@@ -223,10 +245,12 @@ onMounted(async () => {
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
+  return date.toLocaleDateString('ko-KR', {
     year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   })
 }
 
@@ -236,19 +260,19 @@ const fetchComments = async () => {
 
   try {
     const data = await commentAPI.getComments(post.value.id)
-    console.log('댓글 조회 응답:', data)
 
     // 백엔드 응답을 프론트엔드 형식으로 변환
     const commentsWithUser = data.map(comment => {
       if (comment.user) return comment
 
-      if (comment.nickname || comment.profileImage || comment.writerEmail) {
+      const email = comment.writerEmail || comment.userEmail
+      if (comment.nickname || comment.profileImage || email) {
         return {
           ...comment,
-          userId: comment.writerEmail || comment.userId,
+          userId: email || comment.userId,
           user: {
-            id: comment.writerEmail || comment.userId,
-            email: comment.writerEmail || comment.userId,
+            id: email || comment.userId,
+            email: email || comment.userId,
             nickname: comment.nickname || 'Unknown User',
             profileImage: comment.profileImage || '/default-profile.svg'
           }
@@ -258,14 +282,16 @@ const fetchComments = async () => {
       return comment
     })
 
-    console.log('변환된 댓글 목록:', commentsWithUser)
-
     // 로컬 ref에 직접 저장
     localComments.value = commentsWithUser
 
-    console.log('localComments 업데이트 후:', localComments.value)
+    // store에도 댓글 저장
+    store.setComments(post.value.id, commentsWithUser)
   } catch (error) {
-    console.error('댓글 조회 실패:', error)
+    // 403 에러는 인증 문제이므로 인터셉터에서 처리됨
+    if (error.response?.status !== 403) {
+      console.error('댓글 조회 실패:', error)
+    }
   }
 }
 
@@ -278,9 +304,7 @@ const handleAddComment = async () => {
       content: newComment.value.trim(),
     }
 
-    console.log('댓글 작성 요청:', commentData)
-    const newCommentData = await commentAPI.createComment(commentData)
-    console.log('댓글 작성 응답:', newCommentData)
+    await commentAPI.createComment(commentData)
 
     // 댓글 목록 다시 불러오기
     await fetchComments()
@@ -288,7 +312,45 @@ const handleAddComment = async () => {
     newComment.value = ''
   } catch (error) {
     console.error('댓글 작성 실패:', error)
-    console.error('에러 응답:', error.response)
   }
+}
+
+// 댓글 삭제 권한 확인 (본인이 작성한 댓글만 삭제 가능)
+const canDeleteComment = (comment) => {
+  if (!store.currentUser) return false
+
+  const currentUserId = store.currentUser.id || store.currentUser.email
+  const commentUserId = comment.user?.id || comment.user?.email || comment.userId || comment.writerEmail || comment.userEmail
+
+  return currentUserId === commentUserId
+}
+
+// 댓글 삭제 확인 모달 열기
+const handleDeleteComment = (commentId) => {
+  commentToDelete.value = commentId
+  showDeleteConfirm.value = true
+}
+
+// 댓글 삭제 확인
+const confirmDelete = async () => {
+  if (!commentToDelete.value) return
+
+  try {
+    await commentAPI.deleteComment(commentToDelete.value)
+
+    // 댓글 목록 다시 불러오기
+    await fetchComments()
+  } catch (error) {
+    console.error('댓글 삭제 실패:', error)
+  } finally {
+    showDeleteConfirm.value = false
+    commentToDelete.value = null
+  }
+}
+
+// 댓글 삭제 취소
+const cancelDelete = () => {
+  showDeleteConfirm.value = false
+  commentToDelete.value = null
 }
 </script>
