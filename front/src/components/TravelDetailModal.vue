@@ -234,29 +234,6 @@
               />
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium mb-2">위도</label>
-                <input
-                  v-model.number="detailForm.latitude"
-                  type="number"
-                  step="any"
-                  placeholder="37.5796"
-                  class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-2">경도</label>
-                <input
-                  v-model.number="detailForm.longitude"
-                  type="number"
-                  step="any"
-                  placeholder="126.9770"
-                  class="w-full px-4 py-2 bg-background border border-border rounded-lg outline-none focus:ring-2 ring-primary/20"
-                />
-              </div>
-            </div>
-
             <div>
               <label class="block text-sm font-medium mb-2">설명</label>
               <textarea
@@ -387,7 +364,7 @@
     cancel-text="취소"
     :danger="true"
     :on-confirm="confirmDelete"
-    :on-cancel="() => showDeleteConfirm = false"
+    :on-cancel="() => (showDeleteConfirm = false)"
   />
 
   <!-- 정보 모달 -->
@@ -440,18 +417,18 @@ const lightboxIndex = ref(0);
 
 // 삭제 확인 모달 상태
 const showDeleteConfirm = ref(false);
-const deleteConfirmTitle = ref('');
-const deleteConfirmMessage = ref('');
-const deleteType = ref(''); // 'travel' or 'detail'
+const deleteConfirmTitle = ref("");
+const deleteConfirmMessage = ref("");
+const deleteType = ref(""); // 'travel' or 'detail'
 const itemToDelete = ref(null);
 
 // 정보 모달 상태
 const showInfoModal = ref(false);
-const infoMessage = ref('');
+const infoMessage = ref("");
 
 const closeInfoModal = () => {
   showInfoModal.value = false;
-  infoMessage.value = '';
+  infoMessage.value = "";
 };
 
 // Computed
@@ -463,16 +440,22 @@ const travelImages = computed(() => {
     // 배열인 경우
     if (Array.isArray(travel.value.imageUrls)) return travel.value.imageUrls;
     // JSON 문자열인 경우
-    if (typeof travel.value.imageUrls === 'string' && travel.value.imageUrls.trim().startsWith('[')) {
+    if (
+      typeof travel.value.imageUrls === "string" &&
+      travel.value.imageUrls.trim().startsWith("[")
+    ) {
       try {
         const parsed = JSON.parse(travel.value.imageUrls);
         if (Array.isArray(parsed)) return parsed;
       } catch (e) {
-        console.warn('travel imageUrls 파싱 실패:', e);
+        console.warn("travel imageUrls 파싱 실패:", e);
       }
     }
     // 단일 문자열인 경우
-    if (typeof travel.value.imageUrls === 'string' && travel.value.imageUrls.trim() !== '') {
+    if (
+      typeof travel.value.imageUrls === "string" &&
+      travel.value.imageUrls.trim() !== ""
+    ) {
       return [travel.value.imageUrls];
     }
   }
@@ -480,12 +463,15 @@ const travelImages = computed(() => {
   // photos 처리
   if (travel.value.photos) {
     if (Array.isArray(travel.value.photos)) return travel.value.photos;
-    if (typeof travel.value.photos === 'string' && travel.value.photos.trim().startsWith('[')) {
+    if (
+      typeof travel.value.photos === "string" &&
+      travel.value.photos.trim().startsWith("[")
+    ) {
       try {
         const parsed = JSON.parse(travel.value.photos);
         if (Array.isArray(parsed)) return parsed;
       } catch (e) {
-        console.warn('travel photos 파싱 실패:', e);
+        console.warn("travel photos 파싱 실패:", e);
       }
     }
   }
@@ -504,7 +490,10 @@ const getDetailImages = (detail) => {
       return detail.imageUrls.filter((img) => img && typeof img === "string");
     }
     // JSON 문자열인 경우 파싱
-    if (typeof detail.imageUrls === "string" && detail.imageUrls.trim().startsWith("[")) {
+    if (
+      typeof detail.imageUrls === "string" &&
+      detail.imageUrls.trim().startsWith("[")
+    ) {
       try {
         const parsed = JSON.parse(detail.imageUrls.trim());
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -515,7 +504,10 @@ const getDetailImages = (detail) => {
       }
     }
     // 단일 문자열인 경우
-    if (typeof detail.imageUrls === "string" && detail.imageUrls.trim() !== "") {
+    if (
+      typeof detail.imageUrls === "string" &&
+      detail.imageUrls.trim() !== ""
+    ) {
       return [detail.imageUrls.trim()];
     }
   }
@@ -525,7 +517,10 @@ const getDetailImages = (detail) => {
     if (Array.isArray(detail.photos) && detail.photos.length > 0) {
       return detail.photos.filter((img) => img && typeof img === "string");
     }
-    if (typeof detail.photos === "string" && detail.photos.trim().startsWith("[")) {
+    if (
+      typeof detail.photos === "string" &&
+      detail.photos.trim().startsWith("[")
+    ) {
       try {
         const parsed = JSON.parse(detail.photos.trim());
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -545,7 +540,10 @@ const getDetailImages = (detail) => {
     if (Array.isArray(detail.images) && detail.images.length > 0) {
       return detail.images.filter((img) => img && typeof img === "string");
     }
-    if (typeof detail.images === "string" && detail.images.trim().startsWith("[")) {
+    if (
+      typeof detail.images === "string" &&
+      detail.images.trim().startsWith("[")
+    ) {
       try {
         const parsed = JSON.parse(detail.images.trim());
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -559,7 +557,6 @@ const getDetailImages = (detail) => {
 
   return [];
 };
-
 
 // Lightbox 메서드
 const openLightbox = (images, index) => {
@@ -618,10 +615,10 @@ const fetchTravelDetails = async () => {
   try {
     isLoadingDetails.value = true;
     const data = await travelAPI.getTravelDetails(props.travelId);
-//     console.log("🔍 상세 일정 로드 완료:", data);
+    //     console.log("🔍 상세 일정 로드 완료:", data);
     if (data && data.length > 0) {
-//       console.log("🔍 첫 번째 상세 일정의 imageUrls:", data[0].imageUrls);
-//       console.log("🔍 imageUrls 타입:", typeof data[0].imageUrls);
+      //       console.log("🔍 첫 번째 상세 일정의 imageUrls:", data[0].imageUrls);
+      //       console.log("🔍 imageUrls 타입:", typeof data[0].imageUrls);
     }
     travelDetails.value = data;
   } catch (error) {
@@ -726,7 +723,7 @@ const handleAddDetail = async () => {
       imageUrls,
     };
 
-//     console.log("일정 추가 요청 데이터:", detailData);
+    //     console.log("일정 추가 요청 데이터:", detailData);
 
     // 백엔드가 단일 TravelDetailDto 객체를 기대하므로 배열로 감싸지 않음
     await travelAPI.createTravelDetails(props.travelId, detailData);
@@ -779,9 +776,10 @@ const formatDate = (dateString) => {
 const handleDeleteTravel = () => {
   if (!props.travelId) return;
 
-  deleteType.value = 'travel';
-  deleteConfirmTitle.value = '여행 기록 삭제';
-  deleteConfirmMessage.value = '정말로 이 여행 기록을 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다.';
+  deleteType.value = "travel";
+  deleteConfirmTitle.value = "여행 기록 삭제";
+  deleteConfirmMessage.value =
+    "정말로 이 여행 기록을 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다.";
   itemToDelete.value = props.travelId;
   showDeleteConfirm.value = true;
 };
@@ -790,9 +788,9 @@ const handleDeleteTravel = () => {
 const handleDeleteDetail = (detailId) => {
   if (!props.travelId || !detailId) return;
 
-  deleteType.value = 'detail';
-  deleteConfirmTitle.value = '일정 삭제';
-  deleteConfirmMessage.value = '이 일정을 삭제하시겠습니까?';
+  deleteType.value = "detail";
+  deleteConfirmTitle.value = "일정 삭제";
+  deleteConfirmMessage.value = "이 일정을 삭제하시겠습니까?";
   itemToDelete.value = detailId;
   showDeleteConfirm.value = true;
 };
@@ -802,7 +800,7 @@ const confirmDelete = async () => {
   if (!itemToDelete.value) return;
 
   try {
-    if (deleteType.value === 'travel') {
+    if (deleteType.value === "travel") {
       await travelAPI.deleteTravel(itemToDelete.value);
       showDeleteConfirm.value = false;
 
@@ -810,14 +808,14 @@ const confirmDelete = async () => {
       props.onClose();
 
       // 정보 모달 표시
-      infoMessage.value = '여행 기록이 삭제되었습니다.';
+      infoMessage.value = "여행 기록이 삭제되었습니다.";
       showInfoModal.value = true;
 
       // 페이지 새로고침
       setTimeout(() => {
         window.location.reload();
       }, 1500);
-    } else if (deleteType.value === 'detail') {
+    } else if (deleteType.value === "detail") {
       await travelAPI.deleteTravelDetail(props.travelId, itemToDelete.value);
       showDeleteConfirm.value = false;
 
@@ -825,20 +823,21 @@ const confirmDelete = async () => {
       await fetchTravelDetails();
 
       // 정보 모달 표시
-      infoMessage.value = '일정이 삭제되었습니다.';
+      infoMessage.value = "일정이 삭제되었습니다.";
       showInfoModal.value = true;
     }
   } catch (error) {
     console.error("삭제 실패:", error);
     showDeleteConfirm.value = false;
 
-    const errorMsg = deleteType.value === 'travel'
-      ? '여행 기록 삭제에 실패했습니다.'
-      : '일정 삭제에 실패했습니다.';
+    const errorMsg =
+      deleteType.value === "travel"
+        ? "여행 기록 삭제에 실패했습니다."
+        : "일정 삭제에 실패했습니다.";
     alert(errorMsg);
   } finally {
     itemToDelete.value = null;
-    deleteType.value = '';
+    deleteType.value = "";
   }
 };
 
