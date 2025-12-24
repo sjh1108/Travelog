@@ -39,11 +39,18 @@
 
 ---
 
-## 📄 API Specification
+## 📄 문서
+
+### API 명세서
 API 명세서는 노션(Notion)을 통해 관리하고 있으며, Swagger를 통해 실시간 테스트가 가능합니다.
 
 * **[👉 API 명세서 (Notion Link) 바로가기](https://www.notion.so/API-2b293e7eb35481659a4efc7c40de691c)**
 * **Swagger UI**: `http://localhost:8080/swagger-ui/index.html` (서버 실행 시)
+
+### 설계 문서
+* **[Use-Case 다이어그램](./docs/USE_CASE_DIAGRAM.md)** - 시스템 사용 사례 및 액터 관계
+* **[Class 다이어그램](./docs/CLASS_DIAGRAM.md)** - 클래스 구조 및 계층별 설계
+* **[ERD 설계서](./database/ERD_DESIGN.md)** - 데이터베이스 설계 및 테이블 구조
 
 ---
 
@@ -268,8 +275,16 @@ npm run dev
 
 ---
 
-## 🔗 링크
+## 🔗 관련 링크
 
+### 문서
 - [API 명세서 (Notion)](https://www.notion.so/API-2b293e7eb35481659a4efc7c40de691c)
 - [Swagger UI](http://localhost:8080/swagger-ui/index.html)
+- [Use-Case 다이어그램](./docs/USE_CASE_DIAGRAM.md)
+- [Class 다이어그램](./docs/CLASS_DIAGRAM.md)
 - [ERD 설계서](./database/ERD_DESIGN.md)
+
+### 외부 API
+- [Kakao Maps API](https://apis.map.kakao.com/)
+- [Google Gemini API](https://ai.google.dev/)
+- [공공 데이터 포털](https://www.data.go.kr/)
