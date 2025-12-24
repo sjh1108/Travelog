@@ -31,9 +31,15 @@ public class LikeController {
             likeDto.setUserEmail(email);
 
             boolean isLiked = likeService.toggleLike(likeDto);
+            int likeCount = likeService.getLikeCount(postId);
 
-            String message = isLiked ? "좋아요 완료" : "좋아요 취소";
-            return new ResponseEntity<>(message, HttpStatus.OK);
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("isLiked", isLiked);
+            result.put("likeCount", likeCount);
+            result.put("message", isLiked ? "좋아요 완료" : "좋아요 취소");
+
+            log.info("좋아요 토글: postId={}, email={}, isLiked={}", postId, email, isLiked);
+            return new ResponseEntity<>(result, HttpStatus.OK);
 
         } catch (Exception e) {
             log.error("좋아요 처리 실패", e);

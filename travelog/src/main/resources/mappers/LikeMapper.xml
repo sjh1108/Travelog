@@ -25,4 +25,10 @@
           AND user_id = (SELECT id FROM Users WHERE email = #{userEmail})
     </delete>
 
+    <select id="getLikeCount" parameterType="int" resultType="int">
+        SELECT COALESCE(like_count, 0)
+        FROM Posts
+        WHERE id = #{postId}
+    </select>
+
 </mapper>

@@ -6,6 +6,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -40,5 +42,23 @@ public class FileService {
 
         // 5. 접근 가능한 URL 반환 (예: /images/uuid.jpg)
         return "/images/" + savedFilename;
+    }
+
+    /**
+     * 여러 파일을 업로드하고 URL 리스트 반환
+     */
+    public List<String> uploadMultipleFiles(List<MultipartFile> files) throws IOException {
+        List<String> urls = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            if (!file.isEmpty()) {
+                String url = uploadFile(file);
+                if (url != null) {
+                    urls.add(url);
+                }
+            }
+        }
+
+        return urls;
     }
 }

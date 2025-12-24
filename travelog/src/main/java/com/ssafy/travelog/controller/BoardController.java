@@ -2,6 +2,7 @@ package com.ssafy.travelog.controller;
 
 import com.ssafy.travelog.model.dto.BoardDto;
 import com.ssafy.travelog.model.service.BoardService;
+import com.ssafy.travelog.model.service.LikeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.List;
 public class BoardController {
 
     private final BoardService boardService;
+    private final LikeService likeService;
 
     @Operation(summary = "게시글 작성")
     @PostMapping
@@ -47,12 +49,31 @@ public class BoardController {
 
     @Operation(summary = "게시글 전체 조회")
     @GetMapping
-    public ResponseEntity<?> listPosts() {
+    public ResponseEntity<?> listPosts(Authentication authentication) {
         try {
             List<BoardDto> list = boardService.listPosts();
             if (list == null || list.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 데이터가 없을 때 204
             }
+
+            // 로그인한 사용자의 좋아요 여부 추가
+            if (authentication != null) {
+                String email = (String) authentication.getPrincipal();
+                log.info("로그인한 사용자: {}", email);
+                for (BoardDto board : list) {
+                    boolean isLiked = likeService.isLikedByUser(board.getId(), email);
+                    board.setIsLiked(isLiked);
+                    log.info("게시물 ID: {}, isLiked: {}, likeCount: {}", board.getId(), isLiked, board.getLikeCount());
+                }
+            } else {
+                // 로그인하지 않은 경우 모두 false
+                log.info("로그인하지 않은 사용자");
+                for (BoardDto board : list) {
+                    board.setIsLiked(false);
+                    log.info("게시물 ID: {}, isLiked: false, likeCount: {}", board.getId(), board.getLikeCount());
+                }
+            }
+
             return new ResponseEntity<>(list, HttpStatus.OK); // 200 OK
         } catch (Exception e) {
             log.error("게시글 목록 조회 실패", e);

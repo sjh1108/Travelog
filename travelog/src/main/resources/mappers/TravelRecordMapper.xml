@@ -4,9 +4,26 @@
 
 <mapper namespace="com.ssafy.travelog.model.mapper.TravelRecordMapper">
 
+    <resultMap id="TravelRecordResultMap" type="travelRecordDto">
+        <id property="id" column="id"/>
+        <result property="userEmail" column="userEmail"/>
+        <result property="nickname" column="nickname"/>
+        <result property="title" column="title"/>
+        <result property="startDate" column="startDate"/>
+        <result property="endDate" column="endDate"/>
+        <result property="totalCost" column="totalCost"/>
+        <result property="theme" column="theme"/>
+        <result property="isPublic" column="isPublic"/>
+        <result property="imageUrls" column="imageUrls" typeHandler="com.ssafy.travelog.config.JsonListTypeHandler"/>
+        <result property="address" column="address"/>
+        <result property="latitude" column="latitude"/>
+        <result property="longitude" column="longitude"/>
+        <result property="createdAt" column="createdAt"/>
+    </resultMap>
+
     <insert id="insertRecord" parameterType="travelRecordDto">
         INSERT INTO Travel_Records
-            (user_id, title, start_date, end_date, total_cost, theme, is_public)
+            (user_id, title, start_date, end_date, total_cost, theme, is_public, image_urls, address, latitude, longitude)
         VALUES (
                        (SELECT id FROM Users WHERE email = #{userEmail}),
                        #{title},
@@ -14,11 +31,15 @@
                        #{endDate},
                        #{totalCost},
                        #{theme},
-                       #{isPublic}
+                       #{isPublic},
+                       #{imageUrls, typeHandler=com.ssafy.travelog.config.JsonListTypeHandler},
+                       #{address},
+                       #{latitude},
+                       #{longitude}
                )
     </insert>
 
-    <select id="selectAll" resultType="travelRecordDto">
+    <select id="selectAll" resultMap="TravelRecordResultMap">
         SELECT
             t.id,
             u.email AS userEmail,
@@ -29,6 +50,10 @@
             t.total_cost AS totalCost,
             t.theme,
             t.is_public AS isPublic,
+            t.image_urls AS imageUrls,
+            t.address,
+            t.latitude,
+            t.longitude,
             t.created_at AS createdAt
         FROM Travel_Records t
                  JOIN Users u ON t.user_id = u.id
@@ -36,7 +61,7 @@
         ORDER BY t.created_at DESC
     </select>
 
-    <select id="selectMyRecords" resultType="travelRecordDto" parameterType="string">
+    <select id="selectMyRecords" resultMap="TravelRecordResultMap" parameterType="string">
         SELECT
             t.id,
             u.email AS userEmail,
@@ -47,11 +72,20 @@
             t.total_cost AS totalCost,
             t.theme,
             t.is_public AS isPublic,
+            t.image_urls AS imageUrls,
+            t.address,
+            t.latitude,
+            t.longitude,
             t.created_at AS createdAt
         FROM Travel_Records t
                  JOIN Users u ON t.user_id = u.id
         WHERE u.email = #{email}
         ORDER BY t.created_at DESC
     </select>
+
+    <delete id="deleteRecord" parameterType="int">
+        DELETE FROM Travel_Records
+        WHERE id = #{id}
+    </delete>
 
 </mapper>

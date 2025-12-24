@@ -15,12 +15,44 @@
         WHERE email = #{email}
     </select>
 
+    <update id="updateUser" parameterType="UserDto">
+        UPDATE Users
+        SET
+            nickname = #{nickname},
+            profile_image = #{profileImage},
+            bio = #{bio},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE email = #{email}
+    </update>
+
     <select id="existsByEmail" parameterType="String" resultType="int">
         SELECT COUNT(*) FROM Users WHERE email = #{email}
     </select>
 
     <select id="existsByNickname" parameterType="String" resultType="int">
         SELECT COUNT(*) FROM Users WHERE nickname = #{nickname}
+    </select>
+
+    <!-- 트리거가 자동으로 comment_count와 like_count를 처리하므로 수동 감소 쿼리 제거됨 -->
+
+    <delete id="deleteUserComments" parameterType="String">
+        DELETE FROM Comments
+        WHERE user_id = (SELECT id FROM Users WHERE email = #{email})
+    </delete>
+
+    <delete id="deleteUserLikes" parameterType="String">
+        DELETE FROM Likes
+        WHERE user_id = (SELECT id FROM Users WHERE email = #{email})
+    </delete>
+
+    <delete id="deleteUser" parameterType="String">
+        DELETE FROM Users WHERE email = #{email}
+    </delete>
+
+    <select id="selectUserById" parameterType="int" resultType="UserDto">
+        SELECT id, email, password, nickname, profile_image, bio, created_at, updated_at
+        FROM Users
+        WHERE id = #{userId}
     </select>
 
 </mapper>

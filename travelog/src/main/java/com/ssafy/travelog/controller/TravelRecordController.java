@@ -52,8 +52,23 @@ public class TravelRecordController {
         return new ResponseEntity<>(travelService.getMyRecords(email), HttpStatus.OK);
     }
 
-    @Operation(summary = "상세 일정 추가 (여러 개)")
+    @Operation(summary = "상세 일정 추가 (단일)")
     @PostMapping("/{recordId}/details")
+    public ResponseEntity<?> addDetail(@PathVariable int recordId, @RequestBody TravelDetailDto detail) {
+        try {
+            log.info("상세 일정 추가 요청: Record ID={}, Location={}", recordId, detail.getLocationName());
+            // 단일 객체를 List로 변환
+            List<TravelDetailDto> details = List.of(detail);
+            travelService.addDetails(recordId, details);
+            return new ResponseEntity<>("상세 일정 저장 성공", HttpStatus.CREATED);
+        } catch (Exception e) {
+            log.error("상세 일정 저장 실패", e);
+            return new ResponseEntity<>("저장 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Operation(summary = "상세 일정 추가 (여러 개)")
+    @PostMapping("/{recordId}/details/batch")
     public ResponseEntity<?> addDetails(@PathVariable int recordId, @RequestBody List<TravelDetailDto> details) {
         try {
             log.info("상세 일정 추가 요청: Record ID={}, 개수={}", recordId, details.size());
@@ -69,5 +84,33 @@ public class TravelRecordController {
     @GetMapping("/{recordId}/details")
     public ResponseEntity<?> getDetails(@PathVariable int recordId) {
         return new ResponseEntity<>(travelService.getDetails(recordId), HttpStatus.OK);
+    }
+
+    @Operation(summary = "여행 기록 삭제")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable int id, Authentication authentication) {
+        try {
+            String email = (String) authentication.getPrincipal();
+            log.info("여행 기록 삭제 요청: ID={}, User={}", id, email);
+            travelService.deleteRecord(id);
+            return new ResponseEntity<>("여행 기록 삭제 성공", HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("여행 기록 삭제 실패", e);
+            return new ResponseEntity<>("삭제 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Operation(summary = "상세 일정 삭제")
+    @DeleteMapping("/{recordId}/details/{detailId}")
+    public ResponseEntity<?> deleteDetail(@PathVariable int recordId, @PathVariable int detailId, Authentication authentication) {
+        try {
+            String email = (String) authentication.getPrincipal();
+            log.info("상세 일정 삭제 요청: Record ID={}, Detail ID={}, User={}", recordId, detailId, email);
+            travelService.deleteDetail(detailId);
+            return new ResponseEntity<>("상세 일정 삭제 성공", HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("상세 일정 삭제 실패", e);
+            return new ResponseEntity<>("삭제 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

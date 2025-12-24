@@ -100,20 +100,56 @@
                 </div>
               </div>
 
-              <!-- Profile Image URL -->
+              <!-- Profile Image Upload -->
               <div>
-                <label for="register-profile-image" class="block text-sm font-medium mb-2">
-                  프로필 이미지 URL (선택)
+                <label class="block text-sm font-medium mb-2">
+                  프로필 이미지 (선택)
                 </label>
-                <div class="relative">
-                  <Image class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
+
+                <!-- 이미지 미리보기 (선택된 경우에만 표시) -->
+                <div v-if="previewUrl" class="flex justify-center">
+                  <div class="relative">
+                    <img
+                      :src="previewUrl"
+                      alt="프로필 미리보기"
+                      class="w-24 h-24 rounded-full object-cover border-2 border-primary"
+                    />
+                    <button
+                      type="button"
+                      @click="clearProfileImage"
+                      class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                    >
+                      <X class="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 드래그앤드롭 영역 (선택되지 않은 경우에만 표시) -->
+                <div
+                  v-else
+                  @dragover.prevent="handleDragOver"
+                  @dragleave.prevent="isDragging = false"
+                  @drop.prevent="handleDrop"
+                  @click="$refs.profileImageInput?.click()"
+                  :class="[
+                    'relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all',
+                    isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-primary/5'
+                  ]"
+                >
                   <input
-                    id="register-profile-image"
-                    v-model="formData.profileImage"
-                    type="url"
-                    placeholder="http://example.com/profile.jpg"
-                    class="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    ref="profileImageInput"
+                    type="file"
+                    accept="image/*"
+                    @change="handleFileSelect"
+                    class="hidden"
                   />
+                  <Image class="w-10 h-10 mx-auto mb-2 text-foreground/40" />
+                  <p class="text-sm text-foreground/60">
+                    클릭하거나 이미지를 드래그하세요
+                  </p>
+                  <p class="text-xs text-foreground/40 mt-1">
+                    JPG, PNG, GIF
+                  </p>
                 </div>
               </div>
 
@@ -185,6 +221,7 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { X, Mail, Lock, User, Image, FileText } from 'lucide-vue-next'
 import axios from 'axios'
+import { fileAPI } from '@/api/api'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -206,6 +243,12 @@ const formData = ref({
 const passwordConfirm = ref('')
 const isLoading = ref(false)
 const errorMessage = ref('')
+
+// 프로필 이미지 업로드 관련
+const selectedFile = ref(null)
+const previewUrl = ref('')
+const isDragging = ref(false)
+const profileImageInput = ref(null)
 
 // ESC 키로 모달 닫기
 const handleKeydown = (e) => {
@@ -232,6 +275,43 @@ watch(() => props.modelValue, (newValue) => {
   }
 })
 
+// 파일 선택 처리
+const handleFileSelect = (event) => {
+  const file = event.target.files?.[0]
+  if (file && file.type.startsWith('image/')) {
+    selectedFile.value = file
+    previewUrl.value = URL.createObjectURL(file)
+  }
+}
+
+// 드래그 오버 처리
+const handleDragOver = (event) => {
+  event.preventDefault()
+  isDragging.value = true
+}
+
+// 드롭 처리
+const handleDrop = (event) => {
+  event.preventDefault()
+  isDragging.value = false
+
+  const file = event.dataTransfer?.files?.[0]
+  if (file && file.type.startsWith('image/')) {
+    selectedFile.value = file
+    previewUrl.value = URL.createObjectURL(file)
+  }
+}
+
+// 프로필 이미지 제거
+const clearProfileImage = () => {
+  selectedFile.value = null
+  previewUrl.value = ''
+  formData.value.profileImage = ''
+  if (profileImageInput.value) {
+    profileImageInput.value.value = ''
+  }
+}
+
 const handleRegister = async () => {
   // 비밀번호 확인
   if (formData.value.password !== passwordConfirm.value) {
@@ -243,12 +323,62 @@ const handleRegister = async () => {
   errorMessage.value = ''
 
   try {
+    // 프로필 이미지 업로드 (선택한 경우)
+    if (selectedFile.value) {
+      try {
+//         console.log('=== 프로필 이미지 업로드 시작 ===')
+//         console.log('파일:', selectedFile.value.name)
+        const uploadResult = await fileAPI.uploadImage(selectedFile.value)
+//         console.log('업로드 API 응답:', uploadResult)
+//         console.log('응답 타입:', typeof uploadResult)
+
+        // 업로드 결과에서 이미지 URL 추출
+        const serverImageUrl = uploadResult.url || uploadResult.imageUrl ||
+                             uploadResult.data?.url || uploadResult.data?.imageUrl
+
+        if (typeof uploadResult === 'string') {
+          formData.value.profileImage = uploadResult
+//           console.log('✅ 프로필 이미지 설정 완료:', formData.value.profileImage)
+        } else if (serverImageUrl) {
+          formData.value.profileImage = serverImageUrl
+//           console.log('✅ 프로필 이미지 설정 완료:', formData.value.profileImage)
+        } else {
+          console.warn('❌ 이미지 업로드 결과가 불명확합니다:', uploadResult)
+          formData.value.profileImage = ''
+        }
+      } catch (uploadError) {
+        console.error('❌ 프로필 이미지 업로드 실패:', uploadError)
+        console.error('에러 상세:', uploadError.response?.data)
+        formData.value.profileImage = ''
+      }
+    } else {
+//       console.log('프로필 이미지 선택 안 함')
+    }
+
     const response = await axios.post('/api/users/join', formData.value)
 
     // 회원가입 성공 후 자동 로그인
     if (response.data.accessToken) {
       store.setAuthToken(response.data.accessToken)
-      store.setCurrentUser(response.data.user || formData.value)
+
+      // currentUser 설정 (id는 email 사용)
+      let user = response.data.user || {
+        ...formData.value,
+        id: formData.value.email
+      }
+
+      // user 객체에 id가 없으면 email을 id로 사용
+      if (user && !user.id) {
+        user.id = user.email || formData.value.email
+      }
+
+      // profileImage가 없으면 기본값 설정
+      if (!user.profileImage) {
+        user.profileImage = formData.value.profileImage || '/default-profile.svg'
+      }
+
+//       console.log('회원가입 성공 - 사용자 정보:', user)
+      store.setCurrentUser(user)
       emit('update:modelValue', false)
       router.push('/map')
     } else {

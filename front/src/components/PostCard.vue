@@ -3,17 +3,17 @@
     <!-- Header -->
     <div class="flex items-center justify-between p-4 border-b border-border">
       <div class="flex items-center gap-3">
-        <router-link :to="`/profile/${post.userId}`">
+        <router-link :to="profileLink">
           <img
-            :src="post.user.profileImage || '/placeholder.svg'"
-            :alt="post.user.nickname"
+            :src="userProfileImage"
+            :alt="post.user?.nickname || 'User'"
             class="rounded-full object-cover w-10 h-10 cursor-pointer hover:opacity-80 transition-opacity"
           />
         </router-link>
         <div class="flex flex-col">
-          <router-link :to="`/profile/${post.userId}`">
+          <router-link :to="profileLink">
             <h3 class="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer">
-              {{ post.user.nickname }}
+              {{ post.user?.nickname || 'Unknown User' }}
             </h3>
           </router-link>
           <p class="text-xs text-foreground/50">{{ post.travelLocation }}</p>
@@ -28,7 +28,7 @@
     <router-link :to="`/post/${post.id}`">
       <div class="relative w-full cursor-pointer">
         <img
-          :src="post.imageUrl || '/placeholder.svg'"
+          :src="fullImageUrl"
           :alt="post.travelLocation"
           class="w-full aspect-square object-cover hover:opacity-95 transition-opacity"
         />
@@ -38,10 +38,14 @@
     <!-- Actions -->
     <div class="flex items-center gap-4 p-4 border-b border-border">
       <!-- Like Button Component -->
-      <LikeButton :post-id="post.id" :initial-like-count="post.likeCount" />
+      <LikeButton
+        :post-id="post.id"
+        :initial-like-count="post.likeCount"
+        :initial-is-liked="post.isLiked"
+      />
 
       <button
-        @click="onCommentClick(post.id)"
+        @click.stop="handleCommentButtonClick"
         class="flex items-center gap-1 text-foreground/60 hover:text-primary transition-colors group"
         title="Comment"
       >
@@ -57,7 +61,7 @@
     <!-- Caption -->
     <div class="px-4 py-3">
       <p class="text-sm text-foreground">
-        <span class="font-semibold">{{ post.user.nickname }}</span>
+        <span class="font-semibold">{{ post.user?.nickname || 'Unknown User' }}</span>
         &nbsp;
         <span class="text-foreground/80"> {{ post.caption }}</span>
       </p>
@@ -66,7 +70,7 @@
     <!-- Comments Preview -->
     <div class="px-4 pb-4">
       <button
-        @click="onCommentClick(post.id)"
+        @click.stop="handleViewCommentsClick"
         class="text-xs text-foreground/50 hover:text-foreground/70 transition-colors"
       >
         View all {{ commentCount }} comments
@@ -90,6 +94,7 @@ import { computed } from 'vue'
 import { MessageCircle, Share2 } from 'lucide-vue-next'
 import { useAppStore } from '@/stores/app'
 import LikeButton from './LikeButton.vue'
+import { getFullImageUrl, getProfileImageUrl } from '@/utils/imageUtils'
 
 const props = defineProps({
   post: Object,
@@ -99,16 +104,53 @@ const props = defineProps({
 const store = useAppStore()
 
 const commentCount = computed(() => {
-  const comments = store.getComments(props.post.id)
-  return comments.length || props.post.commentCount
+  // 항상 백엔드에서 받은 commentCount 사용 (캐시된 댓글 수가 아닌 실제 DB 값)
+  return props.post.commentCount || 0
 })
+
+// 프로필 링크 계산 (현재 사용자면 /mypage, 아니면 /profile/:id)
+const profileLink = computed(() => {
+  const postUserId = props.post.userId || props.post.writerEmail || props.post.user?.id || props.post.user?.email
+  const currentUserId = store.currentUser?.id || store.currentUser?.email
+
+  // postUserId가 없으면 기본값 반환
+  if (!postUserId) {
+    return '/feed'
+  }
+
+  // 현재 로그인된 사용자와 게시물 작성자가 같으면 /mypage로 이동
+  if (currentUserId && (postUserId === currentUserId ||
+      postUserId === store.currentUser?.email ||
+      postUserId === store.currentUser?.id)) {
+    return '/mypage'
+  }
+
+  // 다른 사용자면 프로필 페이지로 이동
+  return `/profile/${postUserId}`
+})
+
+// 전체 이미지 URL 계산
+const fullImageUrl = computed(() => getFullImageUrl(props.post.imageUrl))
+const userProfileImage = computed(() => getProfileImageUrl(props.post.user?.profileImage))
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
+  return date.toLocaleDateString('ko-KR', {
     year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   })
+}
+
+const handleCommentButtonClick = () => {
+  if (props.onCommentClick) {
+    props.onCommentClick(props.post.id)
+  }
+}
+
+const handleViewCommentsClick = () => {
+  if (props.onCommentClick) {
+    props.onCommentClick(props.post.id)
+  }
 }
 </script>

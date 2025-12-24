@@ -11,4 +11,7 @@ public interface TravelDetailMapper {
 
     // 특정 여행 기록의 모든 상세 일정 조회 (순서대로)
     List<TravelDetailDto> selectDetailsByRecordId(int recordId);
+
+    // 상세 일정 삭제
+    int deleteDetail(int id);
 }
