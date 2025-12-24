@@ -16,3 +16,13 @@ Content-Type: application/json
   "email": "intellij@ssafy.com",
   "password": "1234"
 }
+
+### 회원가입 유효성 검사 테스트 (일부러 틀리기)
+POST http://localhost:8080/api/users/join
+Content-Type: application/json
+
+{
+  "email": "not-email-format",
+  "password": "1",
+  "nickname": ""
+}

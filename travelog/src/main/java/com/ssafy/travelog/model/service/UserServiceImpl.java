@@ -38,7 +38,13 @@ public class UserServiceImpl implements UserService {
         String encodedPassword = passwordEncoder.encode(userDto.getPassword());
         userDto.setPassword(encodedPassword);
 
-        // 4. DB 저장
+        // 4. [추가] 역할(Role) 설정
+        // (만약 관리자 가입 로직이 따로 없다면, 기본적으로 ROLE_USER로 세팅)
+        if (userDto.getRole() == null || userDto.getRole().isEmpty()) {
+            userDto.setRole("ROLE_USER");
+        }
+
+        // 5. DB 저장
         userMapper.insertUser(userDto);
     }
 

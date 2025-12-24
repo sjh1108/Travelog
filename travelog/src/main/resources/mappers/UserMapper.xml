@@ -4,13 +4,13 @@
 
 <mapper namespace="com.ssafy.travelog.model.mapper.UserMapper">
 
-    <insert id="insertUser" parameterType="UserDto">
-        INSERT INTO Users (email, password, nickname, profile_image, bio)
-        VALUES (#{email}, #{password}, #{nickname}, #{profileImage}, #{bio})
+    <insert id="insertUser" parameterType="userDto">
+        INSERT INTO Users (email, password, nickname, profile_image, bio, role)
+        VALUES (#{email}, #{password}, #{nickname}, #{profileImage}, #{bio}, #{role})
     </insert>
 
-    <select id="selectUserByEmail" parameterType="String" resultType="UserDto">
-        SELECT id, email, password, nickname, profile_image, bio, created_at, updated_at
+    <select id="selectUserByEmail" resultType="userDto">
+        SELECT id, email, password, nickname, profile_image, bio, role
         FROM Users
         WHERE email = #{email}
     </select>
