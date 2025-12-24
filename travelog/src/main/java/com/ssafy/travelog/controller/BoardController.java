@@ -45,18 +45,29 @@ public class BoardController {
         }
     }
 
-    @Operation(summary = "게시글 전체 조회")
+//    @Operation(summary = "게시글 전체 조회")
+//    @GetMapping
+//    public ResponseEntity<?> listPosts() {
+//        try {
+//            List<BoardDto> list = boardService.listPosts();
+//            if (list == null || list.isEmpty()) {
+//                return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 데이터가 없을 때 204
+//            }
+//            return new ResponseEntity<>(list, HttpStatus.OK); // 200 OK
+//        } catch (Exception e) {
+//            log.error("게시글 목록 조회 실패", e);
+//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
+    @Operation(summary = "전체 게시물 조회 (무한 스크롤)")
     @GetMapping
-    public ResponseEntity<?> listPosts() {
-        try {
-            List<BoardDto> list = boardService.listPosts();
-            if (list == null || list.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 데이터가 없을 때 204
-            }
-            return new ResponseEntity<>(list, HttpStatus.OK); // 200 OK
-        } catch (Exception e) {
-            log.error("게시글 목록 조회 실패", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<?> list(
+            // lastId가 없으면(null) '가장 최신 글'부터 조회
+            @RequestParam(required = false) Integer lastId,
+            // size가 없으면 기본 10개씩 조회
+            @RequestParam(defaultValue = "10") int size) {
+
+        // 서비스 호출 시 lastId와 size를 넘김
+        return new ResponseEntity<>(boardService.getPostList(lastId, size), HttpStatus.OK);
     }
 }

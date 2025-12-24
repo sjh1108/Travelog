@@ -6,5 +6,8 @@ import java.util.List;
 
 public interface BoardService {
     void writePost(BoardDto boardDto);
-    List<BoardDto> listPosts();
+//     기존 list() 메서드 시그니처 변경
+//    List<BoardDto> listPosts();
+    List<BoardDto> getPostList(Integer lastId, int size);
+
 }

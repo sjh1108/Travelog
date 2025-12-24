@@ -38,8 +38,19 @@ Authorization: Bearer {{authToken}}
   "caption": "제주도 바다가 너무 예뻐요!"
 }
 
-### 4. 전체 게시물 조회
-GET {{host}}/api/posts
+#### 4. 전체 게시물 조회
+#GET {{host}}/api/posts
+#Accept: application/json
+#Authorization: Bearer {{authToken}}
+
+### 4-1. 전체 게시물 조회 (첫 페이지 - 최신순 10개)
+GET {{host}}/api/posts?size=5
+Accept: application/json
+Authorization: Bearer {{authToken}}
+
+### 4-2. 무한 스크롤 (두 번째 요청)
+# 위 4-1 요청의 결과 중 **맨 마지막 게시물의 ID**가 15번이었다고 가정
+GET {{host}}/api/posts?size=5&lastId=15
 Accept: application/json
 Authorization: Bearer {{authToken}}
 

@@ -14,18 +14,41 @@
                )
     </insert>
 
-    <select id="listPosts" resultType="boardDto">
+<!--    <select id="listPosts" resultType="boardDto">-->
+<!--        SELECT-->
+<!--            p.id,-->
+<!--            u.email AS writerEmail,        u.nickname,                    u.profile_image AS profileImage, p.image_url AS imageUrl,-->
+<!--            p.travel_location AS travelLocation,-->
+<!--            p.caption,-->
+<!--            p.like_count AS likeCount,-->
+<!--            p.comment_count AS commentCount,-->
+<!--            p.created_at AS createdAt-->
+<!--        FROM Posts p-->
+<!--                 JOIN Users u ON p.user_id = u.id-->
+<!--        ORDER BY p.created_at DESC-->
+<!--    </select>-->
+    <select id="selectPostsScroll" resultType="boardDto">
         SELECT
-            p.id,
-            u.email AS writerEmail,        u.nickname,                    u.profile_image AS profileImage, p.image_url AS imageUrl,
-            p.travel_location AS travelLocation,
-            p.caption,
-            p.like_count AS likeCount,
-            p.comment_count AS commentCount,
-            p.created_at AS createdAt
+        p.id,
+        p.user_id AS userId,
+        u.nickname,
+        u.profile_image AS profileImage,
+        p.image_url AS imageUrl,
+        p.travel_location AS travelLocation,
+        p.caption,
+        p.like_count AS likeCount,
+        p.comment_count AS commentCount,
+        p.created_at AS createdAt
         FROM Posts p
-                 JOIN Users u ON p.user_id = u.id
-        ORDER BY p.created_at DESC
+        JOIN Users u ON p.user_id = u.id
+        WHERE 1=1
+
+        <if test="lastId != null">
+            AND p.id &lt; #{lastId}
+        </if>
+
+        ORDER BY p.id DESC
+        LIMIT #{size}
     </select>
 
 </mapper>
