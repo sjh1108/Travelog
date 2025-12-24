@@ -221,3 +221,24 @@ export const followAPI = {
     return response.data
   }
 }
+
+// GMS 챗봇 API
+export const gmsAPI = {
+  // 여행지 추천 챗봇
+  chat: async (histories = [], themes = []) => {
+    const params = new URLSearchParams()
+
+    // history 파라미터 추가
+    histories.forEach(history => {
+      params.append('history', history)
+    })
+
+    // theme 파라미터 추가
+    themes.forEach(theme => {
+      params.append('theme', theme)
+    })
+
+    const response = await axios.get(`${API_BASE_URL}/gms?${params.toString()}`)
+    return response.data
+  }
+}
