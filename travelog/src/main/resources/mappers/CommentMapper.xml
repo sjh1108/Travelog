@@ -19,6 +19,7 @@
             c.post_id AS postId,
             u.email AS userEmail,
             u.nickname,
+            u.profile_image AS profileImage,
             c.content,
             c.created_at AS createdAt
         FROM Comments c

@@ -35,4 +35,10 @@
         WHERE p.id = #{postId}
     </select>
 
+    <delete id="deletePost">
+        DELETE FROM Posts
+        WHERE id = #{postId}
+          AND user_id = (SELECT id FROM Users WHERE email = #{writerEmail})
+    </delete>
+
 </mapper>

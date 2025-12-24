@@ -3,7 +3,7 @@
   <Transition name="fade">
     <div
       v-if="modelValue"
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      class="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-50 flex items-center justify-center p-4"
       @click="handleBackdropClick"
     >
       <!-- 모달 컨텐츠 -->
@@ -14,9 +14,13 @@
           @click.stop
         >
           <!-- 헤더 -->
-          <div class="relative bg-gradient-to-r from-primary/10 to-primary/5 px-8 py-6 border-b border-border">
+          <div
+            class="relative bg-gradient-to-r from-primary/10 to-primary/5 px-8 py-6 border-b border-border"
+          >
             <h2 class="text-2xl font-bold text-center">로그인</h2>
-            <p class="text-center text-sm text-foreground/60 mt-1">여행의 순간을 공유하세요</p>
+            <p class="text-center text-sm text-foreground/60 mt-1">
+              여행의 순간을 공유하세요
+            </p>
             <button
               @click="$emit('update:modelValue', false)"
               class="absolute top-4 right-4 text-foreground/60 hover:text-foreground transition-colors"
@@ -34,7 +38,9 @@
                   이메일
                 </label>
                 <div class="relative">
-                  <Mail class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
+                  <Mail
+                    class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40"
+                  />
                   <input
                     id="login-email"
                     v-model="formData.email"
@@ -48,11 +54,16 @@
 
               <!-- Password -->
               <div>
-                <label for="login-password" class="block text-sm font-medium mb-2">
+                <label
+                  for="login-password"
+                  class="block text-sm font-medium mb-2"
+                >
                   비밀번호
                 </label>
                 <div class="relative">
-                  <Lock class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
+                  <Lock
+                    class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40"
+                  />
                   <input
                     id="login-password"
                     v-model="formData.password"
@@ -65,7 +76,10 @@
               </div>
 
               <!-- Error Message -->
-              <div v-if="errorMessage" class="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+              <div
+                v-if="errorMessage"
+                class="bg-red-500/10 border border-red-500/20 rounded-lg p-3"
+              >
                 <p class="text-red-500 text-sm">{{ errorMessage }}</p>
               </div>
 
@@ -75,7 +89,7 @@
                 :disabled="isLoading"
                 class="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg shadow-primary/20"
               >
-                {{ isLoading ? '로그인 중...' : '로그인' }}
+                {{ isLoading ? "로그인 중..." : "로그인" }}
               </button>
             </form>
 
@@ -110,108 +124,117 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAppStore } from '@/stores/app'
-import { X, Mail, Lock } from 'lucide-vue-next'
-import axios from 'axios'
+import { ref, watch, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
+import { useAppStore } from "@/stores/app";
+import { X, Mail, Lock } from "lucide-vue-next";
+import axios from "axios";
 
 const props = defineProps({
   modelValue: Boolean,
-})
+});
 
-const emit = defineEmits(['update:modelValue', 'switchToRegister'])
+const emit = defineEmits(["update:modelValue", "switchToRegister"]);
 
-const router = useRouter()
-const store = useAppStore()
+const router = useRouter();
+const store = useAppStore();
 
 const formData = ref({
-  email: '',
-  password: '',
-})
+  email: "",
+  password: "",
+});
 
-const isLoading = ref(false)
-const errorMessage = ref('')
+const isLoading = ref(false);
+const errorMessage = ref("");
 
 // ESC 키로 모달 닫기
 const handleKeydown = (e) => {
-  if (e.key === 'Escape' && props.modelValue) {
-    emit('update:modelValue', false)
+  if (e.key === "Escape" && props.modelValue) {
+    emit("update:modelValue", false);
   }
-}
+};
 
 onMounted(() => {
-  document.addEventListener('keydown', handleKeydown)
-})
+  document.addEventListener("keydown", handleKeydown);
+});
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeydown)
-})
+  document.removeEventListener("keydown", handleKeydown);
+});
 
 // 모달이 열릴 때 body 스크롤 방지
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.body.style.overflow = ''
-    errorMessage.value = ''
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    if (newValue) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      errorMessage.value = "";
+    }
   }
-})
+);
 
 const handleLogin = async () => {
-  isLoading.value = true
-  errorMessage.value = ''
+  isLoading.value = true;
+  errorMessage.value = "";
 
   try {
-    const response = await axios.post('/api/users/login', formData.value)
+    const response = await axios.post("/api/users/login", formData.value);
 
-    store.setAuthToken(response.data.accessToken)
+    store.setAuthToken(response.data.accessToken);
 
     // currentUser 설정 (id는 email 사용)
     let user = response.data.user || {
       id: formData.value.email,
       email: formData.value.email,
-      nickname: response.data.nickname || '여행자',
-      profileImage: response.data.profileImage || '/default-profile.svg',
-      bio: response.data.bio || (response.data.nickname ? response.data.nickname + '입니다.' : '여행자입니다.')
-    }
+      nickname: response.data.nickname || "여행자",
+      profileImage: response.data.profileImage || "/default-profile.svg",
+      bio:
+        response.data.bio ||
+        (response.data.nickname
+          ? response.data.nickname + "입니다."
+          : "여행자입니다."),
+    };
 
     // user 객체에 id가 없으면 email을 id로 사용
     if (user && !user.id) {
-      user.id = user.email || formData.value.email
+      user.id = user.email || formData.value.email;
     }
 
     // profileImage가 없으면 기본값 설정
     if (!user.profileImage) {
-      user.profileImage = '/default-profile.svg'
+      user.profileImage = "/default-profile.svg";
     }
 
     // bio가 없으면 기본값 설정
-    if (!user.bio || user.bio.trim() === '') {
-      user.bio = user.nickname + '입니다.'
+    if (!user.bio || user.bio.trim() === "") {
+      user.bio = user.nickname + "입니다.";
     }
 
-//     console.log('로그인 성공 - 사용자 정보:', user)
-    store.setCurrentUser(user)
+    //     console.log('로그인 성공 - 사용자 정보:', user)
+    store.setCurrentUser(user);
 
-    emit('update:modelValue', false)
-    router.push('/map')
+    emit("update:modelValue", false);
+    router.push("/map");
   } catch (error) {
-    console.error('로그인 실패:', error)
-    errorMessage.value = error.response?.data?.message || '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.'
+    console.error("로그인 실패:", error);
+    errorMessage.value =
+      error.response?.data?.message ||
+      "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.";
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 const handleBackdropClick = () => {
-  emit('update:modelValue', false)
-}
+  emit("update:modelValue", false);
+};
 
 const switchToRegister = () => {
-  emit('update:modelValue', false)
-  emit('switchToRegister')
-}
+  emit("update:modelValue", false);
+  emit("switchToRegister");
+};
 </script>
 
 <style scoped>

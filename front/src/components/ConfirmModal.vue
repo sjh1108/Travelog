@@ -2,7 +2,7 @@
   <Transition name="modal">
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-[2px]"
       @click.self="onCancel"
     >
       <div
@@ -39,7 +39,7 @@
               'px-4 py-2 rounded-lg font-medium transition-colors',
               danger
                 ? 'bg-red-500 hover:bg-red-600 text-white'
-                : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                : 'bg-primary hover:bg-primary/90 text-primary-foreground',
             ]"
           >
             {{ confirmText }}
@@ -51,48 +51,48 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted } from "vue";
 
 const props = defineProps({
   isOpen: Boolean,
   title: {
     type: String,
-    default: '확인'
+    default: "확인",
   },
   message: {
     type: String,
-    default: '계속 진행하시겠습니까?'
+    default: "계속 진행하시겠습니까?",
   },
   confirmText: {
     type: String,
-    default: '확인'
+    default: "확인",
   },
   cancelText: {
     type: String,
-    default: '취소'
+    default: "취소",
   },
   danger: {
     type: Boolean,
-    default: false
+    default: false,
   },
   onConfirm: Function,
-  onCancel: Function
-})
+  onCancel: Function,
+});
 
 // ESC 키로 모달 닫기
 const handleKeydown = (e) => {
-  if (e.key === 'Escape' && props.isOpen) {
-    props.onCancel()
+  if (e.key === "Escape" && props.isOpen) {
+    props.onCancel();
   }
-}
+};
 
 onMounted(() => {
-  document.addEventListener('keydown', handleKeydown)
-})
+  document.addEventListener("keydown", handleKeydown);
+});
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeydown)
-})
+  document.removeEventListener("keydown", handleKeydown);
+});
 </script>
 
 <style scoped>

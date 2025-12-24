@@ -19,9 +19,25 @@
           <p class="text-xs text-foreground/50">{{ post.travelLocation }}</p>
         </div>
       </div>
-      <button class="text-foreground/60 hover:text-foreground transition-colors">
-        <span class="text-xl">•••</span>
-      </button>
+      <div class="relative" v-if="canDeletePost">
+        <button
+          @click="showDeleteMenu = !showDeleteMenu"
+          class="text-foreground/60 hover:text-foreground transition-colors"
+        >
+          <span class="text-xl">•••</span>
+        </button>
+        <div
+          v-if="showDeleteMenu"
+          class="absolute right-0 mt-2 bg-background border border-border rounded-lg shadow-lg py-1 z-10 min-w-[120px]"
+        >
+          <button
+            @click="handleDeleteClick"
+            class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Image -->
@@ -86,22 +102,39 @@
         {{ formatDate(post.createdAt) }}
       </router-link>
     </div>
+
+    <!-- 삭제 확인 모달 -->
+    <ConfirmModal
+      :is-open="showDeleteConfirm"
+      title="게시물 삭제"
+      message="정말로 이 게시물을 삭제하시겠습니까?"
+      confirm-text="삭제"
+      cancel-text="취소"
+      :danger="true"
+      :on-confirm="confirmDelete"
+      :on-cancel="cancelDelete"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { MessageCircle, Share2 } from 'lucide-vue-next'
 import { useAppStore } from '@/stores/app'
 import LikeButton from './LikeButton.vue'
+import ConfirmModal from './ConfirmModal.vue'
 import { getFullImageUrl, getProfileImageUrl } from '@/utils/imageUtils'
+import { postAPI } from '@/api/api'
 
 const props = defineProps({
   post: Object,
-  onCommentClick: Function
+  onCommentClick: Function,
+  onDelete: Function
 })
 
 const store = useAppStore()
+const showDeleteMenu = ref(false)
+const showDeleteConfirm = ref(false)
 
 const commentCount = computed(() => {
   // 항상 백엔드에서 받은 commentCount 사용 (캐시된 댓글 수가 아닌 실제 DB 값)
@@ -152,5 +185,50 @@ const handleViewCommentsClick = () => {
   if (props.onCommentClick) {
     props.onCommentClick(props.post.id)
   }
+}
+
+// 게시물 삭제 권한 확인 (본인이 작성한 게시물만 삭제 가능)
+const canDeletePost = computed(() => {
+  if (!store.currentUser) return false
+
+  // 현재 사용자의 이메일 (우선순위: email > id)
+  const currentUserEmail = store.currentUser.email || store.currentUser.id
+
+  // 게시물 작성자의 이메일
+  const postUserEmail =
+    props.post.writerEmail ||
+    props.post.userId ||
+    props.post.user?.email ||
+    props.post.user?.id
+
+  return currentUserEmail === postUserEmail
+})
+
+// 삭제 확인 모달 열기
+const handleDeleteClick = () => {
+  showDeleteMenu.value = false
+  showDeleteConfirm.value = true
+}
+
+// 게시물 삭제 확인
+const confirmDelete = async () => {
+  try {
+    await postAPI.deletePost(props.post.id)
+
+    showDeleteConfirm.value = false
+
+    // 부모 컴포넌트에 삭제 알림 (성공 여부 전달)
+    if (props.onDelete) {
+      props.onDelete(props.post.id, true)
+    }
+  } catch (error) {
+    console.error('게시물 삭제 실패:', error)
+    showDeleteConfirm.value = false
+  }
+}
+
+// 삭제 취소
+const cancelDelete = () => {
+  showDeleteConfirm.value = false
 }
 </script>

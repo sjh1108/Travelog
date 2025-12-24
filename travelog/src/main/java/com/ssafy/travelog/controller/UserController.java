@@ -33,7 +33,7 @@ public class UserController {
             userService.join(userDto);
 
             // 회원가입 후 자동 로그인을 위한 토큰 발급
-            String token = jwtUtil.createToken(userDto.getEmail(), userDto.getNickname());
+            String token = jwtUtil.createToken(userDto.getEmail(), userDto.getNickname(), userDto.getRole());
 
             Map<String, Object> result = new HashMap<>();
             result.put("message", "회원가입 성공");

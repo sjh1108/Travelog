@@ -47,6 +47,12 @@ export const postAPI = {
   createPost: async (postData) => {
     const response = await axios.post(`${API_BASE_URL}/posts`, postData)
     return response.data
+  },
+
+  // 게시물 삭제
+  deletePost: async (postId) => {
+    const response = await axios.delete(`${API_BASE_URL}/posts/${postId}`)
+    return response.data
   }
 }
 

@@ -80,4 +80,19 @@ public class BoardController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @Operation(summary = "게시글 삭제")
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<?> deletePost(@PathVariable int postId, Authentication authentication) {
+        try {
+            String email = (String) authentication.getPrincipal();
+            log.info("게시글 삭제 요청 - postId: {}, email: {}", postId, email);
+
+            boardService.deletePost(postId, email);
+            return new ResponseEntity<>("게시글 삭제 성공", HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("게시글 삭제 실패", e);
+            return new ResponseEntity<>("삭제 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
