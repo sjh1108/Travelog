@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Secrets (추가) ###
+application-secret.properties
+application-secret.yml

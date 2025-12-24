@@ -52,6 +52,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/travels/**").authenticated()
                         .requestMatchers("/api/comments/**").authenticated()
                         .requestMatchers("/api/likes/**").authenticated()
+                        .requestMatchers("/api/files/**").authenticated()
+                        .requestMatchers("/api/gms").authenticated()
                         .requestMatchers("/api/notifications/**").authenticated()
 
                         // Swagger 등 나머지 허용
