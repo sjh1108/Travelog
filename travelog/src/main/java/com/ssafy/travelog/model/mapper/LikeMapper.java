@@ -13,4 +13,7 @@ public interface LikeMapper {
 
     // 좋아요 취소 (DELETE)
     void unLike(LikeDto likeDto);
+
+    // 게시물의 좋아요 수 조회
+    int getLikeCount(int postId);
 }

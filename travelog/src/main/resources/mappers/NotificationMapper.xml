@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.travelog.model.mapper.NotificationMapper">
+
+    <!-- 알림 생성 -->
+    <insert id="insertNotification" parameterType="notificationDto">
+        INSERT INTO Notifications (user_id, actor_id, type, post_id, comment_id, is_read)
+        VALUES (
+            (SELECT id FROM Users WHERE email = #{userEmail}),
+            (SELECT id FROM Users WHERE email = #{actorEmail}),
+            #{type},
+            #{postId},
+            #{commentId},
+            0
+        )
+    </insert>
+
+    <!-- 특정 사용자의 알림 목록 조회 (읽지 않은 것 우선, 최신순) -->
+    <select id="selectNotificationsByUserEmail" resultType="notificationDto">
+        SELECT
+            n.id,
+            u1.email AS userEmail,
+            u2.email AS actorEmail,
+            u2.nickname AS actorNickname,
+            u2.profile_image AS actorProfileImage,
+            n.type,
+            n.post_id AS postId,
+            n.comment_id AS commentId,
+            n.is_read AS isRead,
+            n.created_at AS createdAt
+        FROM Notifications n
+        JOIN Users u1 ON n.user_id = u1.id
+        JOIN Users u2 ON n.actor_id = u2.id
+        WHERE u1.email = #{userEmail}
+        ORDER BY n.is_read ASC, n.created_at DESC
+    </select>
+
+    <!-- 알림 읽음 처리 -->
+    <update id="markAsRead">
+        UPDATE Notifications
+        SET is_read = 1
+        WHERE id = #{id}
+    </update>
+
+    <!-- 알림 전체 읽음 처리 -->
+    <update id="markAllAsRead">
+        UPDATE Notifications
+        SET is_read = 1
+        WHERE user_id = (SELECT id FROM Users WHERE email = #{userEmail})
+    </update>
+
+    <!-- 알림 삭제 -->
+    <delete id="deleteNotification">
+        DELETE FROM Notifications
+        WHERE id = #{id}
+    </delete>
+
+    <!-- 읽지 않은 알림 개수 -->
+    <select id="countUnreadNotifications" resultType="int">
+        SELECT COUNT(*)
+        FROM Notifications
+        WHERE user_id = (SELECT id FROM Users WHERE email = #{userEmail})
+        AND is_read = 0
+    </select>
+
+</mapper>

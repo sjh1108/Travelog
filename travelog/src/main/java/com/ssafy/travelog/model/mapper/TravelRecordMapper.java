@@ -14,4 +14,7 @@ public interface TravelRecordMapper {
 
     // 내 여행 기록 조회
     List<TravelRecordDto> selectMyRecords(String email);
+
+    // 여행 기록 삭제
+    int deleteRecord(int id);
 }

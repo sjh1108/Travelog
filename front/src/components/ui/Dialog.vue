@@ -1,5 +1,5 @@
 <template>
-  <Teleport to="body">
+  <div>
     <Transition
       enter-active-class="transition-opacity duration-200"
       enter-from-class="opacity-0"
@@ -31,7 +31,7 @@
         <slot />
       </div>
     </Transition>
-  </Teleport>
+  </div>
 </template>
 
 <script setup>

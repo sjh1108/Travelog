@@ -9,21 +9,21 @@
         :class="[
           'h-6 w-6 transition-all duration-300',
           isLiked
-            ? 'fill-secondary text-secondary scale-125'
-            : 'text-foreground/60 group-hover:scale-110 group-hover:text-secondary'
+            ? 'fill-red-500 text-red-500 scale-125'
+            : 'text-foreground/60 group-hover:scale-110 group-hover:text-red-500'
         ]"
       />
       <div
         v-if="isLiked"
-        class="absolute inset-0 rounded-full border-2 border-secondary animate-ping opacity-75"
+        class="absolute inset-0 rounded-full border-2 border-red-500 animate-ping opacity-75"
       />
     </button>
 
     <span
       :class="[
         'text-sm font-semibold transition-all',
-        animateCount ? 'scale-125 text-secondary' : '',
-        isLiked ? 'text-secondary' : 'text-foreground'
+        animateCount ? 'scale-125 text-red-500' : '',
+        isLiked ? 'text-red-500' : 'text-foreground'
       ]"
     >
       {{ likeCount }}
@@ -32,26 +32,59 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, watch } from 'vue'
 import { Heart } from 'lucide-vue-next'
-import { useAppStore } from '@/stores/app'
+import { likeAPI } from '@/api/api'
 
 const props = defineProps({
-  postId: String,
-  initialLikeCount: Number
+  postId: [String, Number],
+  initialLikeCount: Number,
+  initialIsLiked: Boolean
 })
-const store = useAppStore()
+
+// 디버깅: LikeButton props 확인
+// console.log('LikeButton - postId:', props.postId)
+// console.log('LikeButton - initialIsLiked:', props.initialIsLiked)
+// console.log('LikeButton - initialLikeCount:', props.initialLikeCount)
 
 const animateCount = ref(false)
+const isLiked = ref(props.initialIsLiked || false)
+const likeCount = ref(props.initialLikeCount || 0)
 
-const isLiked = computed(() => store.likedPosts.has(props.postId))
-const likeCount = computed(() => props.initialLikeCount + (isLiked.value ? 1 : 0))
+// console.log('LikeButton - isLiked.value:', isLiked.value)
+// console.log('LikeButton - likeCount.value:', likeCount.value)
 
-const handleLikeClick = () => {
-  store.toggleLike(props.postId)
-  animateCount.value = true
-  setTimeout(() => {
-    animateCount.value = false
-  }, 600)
+// props 변경 감지 - 페이지 이동 후 돌아왔을 때 업데이트
+watch(() => props.initialIsLiked, (newValue) => {
+//   console.log('props.initialIsLiked 변경:', newValue)
+  isLiked.value = newValue || false
+})
+
+watch(() => props.initialLikeCount, (newValue) => {
+//   console.log('props.initialLikeCount 변경:', newValue)
+  likeCount.value = newValue || 0
+})
+
+const handleLikeClick = async () => {
+  try {
+    // API 호출
+    const response = await likeAPI.toggleLike(props.postId)
+//     console.log('좋아요 응답:', response)
+
+    // 백엔드 응답으로 상태 업데이트
+    if (response.isLiked !== undefined) {
+      isLiked.value = response.isLiked
+    }
+    if (response.likeCount !== undefined) {
+      likeCount.value = response.likeCount
+    }
+
+    animateCount.value = true
+    setTimeout(() => {
+      animateCount.value = false
+    }, 600)
+  } catch (error) {
+    console.error('좋아요 토글 실패:', error)
+  }
 }
 </script>

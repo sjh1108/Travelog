@@ -39,16 +39,22 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 로그인, 회원가입 허용
                         .requestMatchers("/api/users/join", "/api/users/login").permitAll()
+                        // 회원정보 수정, 회원탈퇴는 인증 필요
+                        .requestMatchers("/api/users/me").authenticated()
                         .requestMatchers("/images/**").permitAll()
+                        .requestMatchers("/api/files/upload").permitAll()
+
+                        // 게시물 조회(GET)는 누구나 가능, 작성/수정/삭제는 인증 필요
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts/**").permitAll()
+                        .requestMatchers("/api/posts/**").authenticated()
 
                         // [중요] 여행 관련 모든 하위 주소 허용 (details 포함)
                         .requestMatchers("/api/travels/**").authenticated()
-                        .requestMatchers("/api/posts/**").authenticated()
-                        .requestMatchers("/api/posts/**").authenticated()
                         .requestMatchers("/api/comments/**").authenticated()
                         .requestMatchers("/api/likes/**").authenticated()
                         .requestMatchers("/api/files/**").authenticated()
                         .requestMatchers("/api/gms").authenticated()
+                        .requestMatchers("/api/notifications/**").authenticated()
 
                         // Swagger 등 나머지 허용
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()
@@ -67,7 +73,7 @@ public class SecurityConfig {
 
         // Vue.js 개발 서버 주소 허용
         config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:8080"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true); // 쿠키/인증정보 포함 허용
 

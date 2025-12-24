@@ -10,4 +10,6 @@ public interface TravelRecordService {
     List<TravelRecordDto> getMyRecords(String email);
     void addDetails(int recordId, List<TravelDetailDto> details);
     List<TravelDetailDto> getDetails(int recordId);
+    void deleteRecord(int id);
+    void deleteDetail(int detailId);
 }

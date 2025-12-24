@@ -3,8 +3,17 @@
     <Navigation />
     <main class="flex-1 py-8 px-4">
       <div class="max-w-2xl mx-auto">
-        <div v-if="store.posts.length === 0" class="flex items-center justify-center py-20">
-          <p class="text-foreground/50">No posts yet. Start following users!</p>
+        <div v-if="store.posts.length === 0" class="flex flex-col items-center justify-center py-20 gap-4">
+          <p class="text-foreground/50">
+            {{ store.currentUser ? 'No posts yet. Start following users!' : 'Please log in to view posts.' }}
+          </p>
+          <button
+            v-if="!store.currentUser"
+            @click="store.showLoginModal = true"
+            class="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-semibold"
+          >
+            Log In
+          </button>
         </div>
         <div v-else class="space-y-4">
           <PostCard
@@ -30,7 +39,7 @@
     <CommentModal
       v-if="selectedPost"
       :post="selectedPost"
-      :is-open="!!selectedPostId"
+      :is-open="!!selectedPostId && !!selectedPost"
       :on-close="() => setSelectedPostId(null)"
     />
   </div>
@@ -43,7 +52,7 @@ import Footer from '@/components/Footer.vue'
 import PostCard from '@/components/PostCard.vue'
 import CommentModal from '@/components/CommentModal.vue'
 import { useAppStore } from '@/stores/app'
-import { dummyPosts, dummyUsers } from '@/data/dummy-data'
+import { postAPI } from '@/api/api'
 
 const store = useAppStore()
 const selectedPostId = ref(null)
@@ -51,12 +60,70 @@ const isLoading = ref(false)
 const observerTarget = ref(null)
 let observer = null
 
-// Initialize demo data
-onMounted(() => {
-  if (store.posts.length === 0) {
-    store.setPosts(dummyPosts)
-    store.setCurrentUser(dummyUsers['user-1'])
+// Fetch posts from API
+const fetchPosts = async () => {
+  try {
+    isLoading.value = true
+//     console.log('게시물 조회 시작...')
+    const data = await postAPI.getPosts()
+//     console.log('받은 게시물 데이터:', data)
+
+    // 백엔드 응답을 프론트엔드 형식으로 변환
+    const postsWithUser = data.map(post => {
+//       console.log('게시물 원본 데이터:', post)
+//       console.log('isLiked:', post.isLiked, 'likeCount:', post.likeCount)
+
+      // 이미 user 객체가 있으면 그대로 사용
+      if (post.user) {
+        return post
+      }
+
+      // nickname, profileImage가 있으면 user 객체로 변환
+      const email = post.writerEmail || post.userEmail
+      if (post.nickname || post.profileImage || email) {
+        return {
+          ...post,
+          userId: email, // userId가 없으면 writerEmail/userEmail 사용
+          user: {
+            id: email,
+            email: email,
+            nickname: post.nickname || 'Unknown User',
+            profileImage: post.profileImage || '/default-profile.svg'
+          }
+        }
+      }
+
+      console.warn(`게시물 ${post.id}에 작성자 정보가 없습니다.`)
+      return post
+    })
+
+//     console.log('처리된 게시물:', postsWithUser)
+    store.setPosts(postsWithUser)
+  } catch (error) {
+    console.error('게시물 조회 실패:', error)
+    console.error('에러 상세:', error.response)
+
+    // 403 에러 (인증 필요) 또는 401 에러 (로그인 필요) 시 빈 배열 설정
+    if (error.response?.status === 403 || error.response?.status === 401) {
+//       console.log('로그인이 필요합니다. 빈 피드를 표시합니다.')
+      store.setPosts([])
+
+      // 로그인하지 않은 상태임을 사용자에게 알림
+      if (!store.currentUser) {
+//         console.log('로그인하면 게시물을 볼 수 있습니다.')
+      }
+    } else {
+      // 다른 에러의 경우 빈 배열 설정
+      store.setPosts([])
+    }
+  } finally {
+    isLoading.value = false
   }
+}
+
+onMounted(async () => {
+  // Load posts from API
+  await fetchPosts()
 
   // Setup Intersection Observer for infinite scroll
   observer = new IntersectionObserver(
@@ -79,17 +146,10 @@ onUnmounted(() => {
   }
 })
 
-const handleLoadMore = () => {
-  isLoading.value = true
-  // Simulate API call delay
-  setTimeout(() => {
-    const newPosts = dummyPosts.map((post, index) => ({
-      ...post,
-      id: `post-${Date.now()}-${index}`,
-    }))
-    store.setPosts([...store.posts, ...newPosts])
-    isLoading.value = false
-  }, 600)
+const handleLoadMore = async () => {
+  // 무한 스크롤 기능은 백엔드에서 페이지네이션을 지원할 때 구현
+  // 현재는 전체 게시물만 불러옴
+//   console.log('무한 스크롤 - 추가 게시물 로드는 백엔드 페이지네이션 지원 필요')
 }
 
 const handleCommentClick = (postId) => {

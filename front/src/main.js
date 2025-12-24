@@ -25,11 +25,11 @@ axios.interceptors.request.use(
   }
 )
 
-// 401 에러 시 자동 로그아웃 및 로그인 모달 열기
+// 401/403 에러 시 자동 로그아웃 및 로그인 모달 열기
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       const store = useAppStore()
       store.logout()
       store.showLoginModal = true
