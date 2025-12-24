@@ -21,6 +21,7 @@
             :key="post.id"
             :post="post"
             :on-comment-click="handleCommentClick"
+            :on-delete="handlePostDelete"
           />
 
           <!-- Infinite scroll trigger -->
@@ -42,6 +43,14 @@
       :is-open="!!selectedPostId && !!selectedPost"
       :on-close="() => setSelectedPostId(null)"
     />
+
+    <!-- Delete Success Modal -->
+    <InfoModal
+      :is-open="showDeleteSuccess"
+      title="삭제 완료"
+      message="게시물이 삭제되었습니다."
+      :on-close="closeDeleteSuccess"
+    />
   </div>
 </template>
 
@@ -51,6 +60,7 @@ import Navigation from '@/components/Navigation.vue'
 import Footer from '@/components/Footer.vue'
 import PostCard from '@/components/PostCard.vue'
 import CommentModal from '@/components/CommentModal.vue'
+import InfoModal from '@/components/InfoModal.vue'
 import { useAppStore } from '@/stores/app'
 import { postAPI } from '@/api/api'
 
@@ -58,6 +68,7 @@ const store = useAppStore()
 const selectedPostId = ref(null)
 const isLoading = ref(false)
 const observerTarget = ref(null)
+const showDeleteSuccess = ref(false)
 let observer = null
 
 // Fetch posts from API
@@ -163,4 +174,21 @@ const setSelectedPostId = (postId) => {
 const selectedPost = computed(() => {
   return store.posts.find((p) => p.id === selectedPostId.value)
 })
+
+// 게시물 삭제 핸들러
+const handlePostDelete = (postId, success = false) => {
+  // store에서 게시물 제거
+  const updatedPosts = store.posts.filter(p => p.id !== postId)
+  store.setPosts(updatedPosts)
+
+  // 삭제 성공 모달 표시
+  if (success) {
+    showDeleteSuccess.value = true
+  }
+}
+
+// 삭제 완료 모달 닫기
+const closeDeleteSuccess = () => {
+  showDeleteSuccess.value = false
+}
 </script>

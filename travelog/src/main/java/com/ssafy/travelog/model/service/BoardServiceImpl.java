@@ -23,4 +23,9 @@ public class BoardServiceImpl implements BoardService {
     public List<BoardDto> listPosts() {
         return boardMapper.listPosts();
     }
+
+    @Override
+    public void deletePost(int postId, String writerEmail) {
+        boardMapper.deletePost(postId, writerEmail);
+    }
 }

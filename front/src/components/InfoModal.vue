@@ -2,7 +2,7 @@
   <Transition name="modal">
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      class="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-[2px]"
       @click.self="handleClose"
     >
       <div
@@ -20,10 +20,17 @@
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              ></path>
             </svg>
           </div>
-          <p class="text-lg font-semibold text-foreground mb-2">{{ message }}</p>
+          <p class="text-lg font-semibold text-foreground mb-2">
+            {{ message }}
+          </p>
         </div>
 
         <!-- 버튼 -->
@@ -41,37 +48,37 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted } from "vue";
 
 const props = defineProps({
   isOpen: Boolean,
   message: {
     type: String,
-    default: ''
+    default: "",
   },
-  onClose: Function
-})
+  onClose: Function,
+});
 
 const handleClose = () => {
   if (props.onClose) {
-    props.onClose()
+    props.onClose();
   }
-}
+};
 
 // ESC 키로 모달 닫기
 const handleKeydown = (e) => {
-  if (e.key === 'Escape' && props.isOpen) {
-    handleClose()
+  if (e.key === "Escape" && props.isOpen) {
+    handleClose();
   }
-}
+};
 
 onMounted(() => {
-  document.addEventListener('keydown', handleKeydown)
-})
+  document.addEventListener("keydown", handleKeydown);
+});
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeydown)
-})
+  document.removeEventListener("keydown", handleKeydown);
+});
 </script>
 
 <style scoped>

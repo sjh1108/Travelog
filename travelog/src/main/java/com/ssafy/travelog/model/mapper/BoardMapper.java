@@ -13,4 +13,7 @@ public interface BoardMapper {
 
     // 특정 게시물의 작성자 이메일 조회
     String getPostWriterEmail(int postId);
+
+    // 게시물 삭제 (본인 것만 삭제 가능하도록 email 체크)
+    void deletePost(int postId, String writerEmail);
 }

@@ -7,4 +7,5 @@ import java.util.List;
 public interface BoardService {
     void writePost(BoardDto boardDto);
     List<BoardDto> listPosts();
+    void deletePost(int postId, String writerEmail);
 }
