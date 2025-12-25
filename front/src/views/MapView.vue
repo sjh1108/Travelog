@@ -1567,7 +1567,7 @@ const updateMyMapMarkers = () => {
       customOverlay = new window.kakao.maps.CustomOverlay({
         position: markerPosition,
         content: createMyMapInfoWindowContent(log),
-        yAnchor: 3.1, // 마커와 겹치지 않도록 충분히 위쪽에 표시
+        yAnchor: 1.25, // 마커와 겹치지 않도록 충분히 위쪽에 표시
         zIndex: 3
       });
 
