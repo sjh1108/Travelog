@@ -24,7 +24,7 @@
 * **ORM**: MyBatis
 * **AI**: Google Gemini API (여행지 추천)
 * **API Docs**: SpringDoc (Swagger)
-* **Storage**: AWS S3 (이미지 업로드)
+
 
 ### Frontend
 <img src="https://img.shields.io/badge/vue.js-%234FC08D.svg?style=for-the-badge&logo=vuedotjs&logoColor=white"> <img src="https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=F7DF1E"> <img src="https://img.shields.io/badge/axios-%235A29E4.svg?style=for-the-badge&logo=axios&logoColor=white">
@@ -41,10 +41,9 @@
 
 ## 📄 문서
 
-### API 명세서
-API 명세서는 노션(Notion)을 통해 관리하고 있으며, Swagger를 통해 실시간 테스트가 가능합니다.
+### API
+Swagger를 통해 실시간 테스트가 가능합니다.
 
-* **[👉 API 명세서 (Notion Link) 바로가기](https://www.notion.so/API-2b293e7eb35481659a4efc7c40de691c)**
 * **Swagger UI**: `http://localhost:8080/swagger-ui/index.html` (서버 실행 시)
 
 ### 설계 문서
@@ -77,7 +76,6 @@ API 명세서는 노션(Notion)을 통해 관리하고 있으며, Swagger를 통
 
 ### 📱 **소셜 피드 (SNS)**
 - [x] 게시글(Post) 작성/수정/삭제
-- [x] 이미지 업로드 (AWS S3)
 - [x] 게시글 좋아요 기능
 - [x] 댓글 작성/삭제
 - [x] 팔로잉 사용자 피드 조회
@@ -121,7 +119,6 @@ travelog/src/main/java/com/ssafy/travelog
 │   ├── CommentController.java  # 댓글
 │   ├── LikeController.java     # 좋아요
 │   ├── NotificationController.java  # 알림
-│   ├── FileController.java     # 파일 업로드 (AWS S3)
 │   └── GMSController.java      # AI 추천 (Gemini)
 │
 ├── model/
@@ -182,7 +179,7 @@ front/src/
 | **AI 추천** | GET | `/api/gms` | 여행지 추천 |
 | **파일** | POST | `/api/files/upload` | 이미지 업로드 (S3) |
 
-자세한 API 명세는 [**Notion 문서**](https://www.notion.so/API-2b293e7eb35481659a4efc7c40de691c) 또는 Swagger UI를 참고하세요.
+자세한 API 명세는 Swagger UI를 참고하세요.
 
 ---
 
@@ -199,7 +196,6 @@ front/src/
 - 자연어 기반 맞춤형 추천 제공
 
 ### 3️⃣ 효율적인 파일 업로드
-- AWS S3 연동을 통한 이미지 저장
 - Presigned URL을 활용한 안전한 파일 업로드
 - 여러 이미지 동시 업로드 지원
 
@@ -210,9 +206,9 @@ front/src/
 
 ### 5️⃣ 지도 기반 여행 경로 시각화
 - Kakao Maps API를 활용한 인터랙티브 지도
-- 여행 경로를 지도 상에 표시
+- 내 여행 기록을 마커로 지도상에 표시
 - 마커 클릭 시 관광지 상세 정보 팝업
-
+- 마커 클릭 시 내 여행 상세정보 및 사진 팝업
 ---
 
 ## 📸 스크린샷
@@ -246,17 +242,17 @@ mvn spring-boot:run
 ### Frontend
 ```bash
 cd front
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 ### 환경 변수 설정
 `application.properties` 또는 `.env` 파일에 다음 설정 필요:
 - MySQL 데이터베이스 연결 정보
 - JWT Secret Key
-- AWS S3 Credentials
 - Google Gemini API Key
 - Kakao Maps API Key
+- GMS Key -> 리소스에 설정
 
 ---
 
@@ -264,8 +260,8 @@ npm run dev
 
 | 이름 | 역할 | 담당 기능 |
 |------|------|----------|
-| 팀원1 | Backend | 인증/인가, 게시글, 여행기록 API |
-| 팀원2 | Frontend | UI/UX, 지도 연동, 상태 관리 |
+| 송주헌 | Backend 팀장 | 백엔드, 인프라, 문서작성, 인증/인가(JWT, Security), 전반적인 백엔드 API, CRUD, 파일업로드 구현,AI연동(GMS_key) |
+| 장상민 | Full Stack 팀원 | 프론트, UI/UX, 지도 연동, 상태 관리, 여행기록 관련 CRUD, 사용자 CRUD, 소셜기능 API (팔로우/팔로워) |
 
 ---
 
@@ -278,7 +274,6 @@ npm run dev
 ## 🔗 관련 링크
 
 ### 문서
-- [API 명세서 (Notion)](https://www.notion.so/API-2b293e7eb35481659a4efc7c40de691c)
 - [Swagger UI](http://localhost:8080/swagger-ui/index.html)
 - [Use-Case 다이어그램](./docs/USE_CASE_DIAGRAM.md)
 - [Class 다이어그램](./docs/CLASS_DIAGRAM.md)
