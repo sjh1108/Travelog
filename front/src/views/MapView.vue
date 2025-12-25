@@ -1051,7 +1051,7 @@ const updateMapMarkers = (spots) => {
         customOverlay = new window.kakao.maps.CustomOverlay({
           position: markerPosition,
           content: createInfoWindowContent(spot),
-          yAnchor: 3.1, // 마커와 겹치지 않도록 충분히 위쪽에 표시
+          yAnchor: 1.25, // 마커와 겹치지 않도록 충분히 위쪽에 표시
           zIndex: 3
         });
 
@@ -1104,8 +1104,7 @@ const createInfoWindowContent = (spot) => {
   return `
     <div style="
       padding: 12px;
-      min-width: 180px;
-      max-width: 250px;
+      width: 220px;
       box-sizing: border-box;
       font-family: sans-serif;
       background: white;
@@ -1129,11 +1128,11 @@ const createInfoWindowContent = (spot) => {
           src="${spot.image}"
           style="
             width: 100%;
-            height: auto;
-            max-height: 120px;
+            height: 120px;
             object-fit: cover;
             border-radius: 4px;
             margin-bottom: 8px;
+            display: block;
           "
           onerror="this.style.display='none'"
         />
@@ -1673,8 +1672,7 @@ const createMyMapInfoWindowContent = (log) => {
   return `
     <div style="
       padding: 12px;
-      min-width: 180px;
-      max-width: 250px;
+      width: 220px;
       box-sizing: border-box;
       font-family: sans-serif;
       background: white;
@@ -1698,11 +1696,11 @@ const createMyMapInfoWindowContent = (log) => {
           src="${fullImageUrl}"
           style="
             width: 100%;
-            height: auto;
-            max-height: 120px;
+            height: 120px;
             object-fit: cover;
             border-radius: 4px;
             margin-bottom: 8px;
+            display: block;
           "
           onerror="this.style.display='none'"
         />
